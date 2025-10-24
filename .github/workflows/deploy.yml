@@ -1,0 +1,105 @@
+name: Deploy to GCloud
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: mindspace-468015
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > ~/.ssh/gcp_key
+          chmod 600 ~/.ssh/gcp_key
+          ssh-keyscan -H $(gcloud compute instances describe instance-20250804-164027 --zone=us-central1-c --format='get(networkInterfaces[0].accessConfigs[0].natIP)') >> ~/.ssh/known_hosts
+
+      - name: Get instance IP
+        id: get-ip
+        run: |
+          INSTANCE_IP=$(gcloud compute instances describe instance-20250804-164027 \
+            --zone=us-central1-c \
+            --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+          echo "ip=$INSTANCE_IP" >> $GITHUB_OUTPUT
+
+      - name: Deploy application
+        env:
+          INSTANCE_IP: ${{ steps.get-ip.outputs.ip }}
+        run: |
+          ssh -i ~/.ssh/gcp_key -o StrictHostKeyChecking=no ${{ secrets.GCP_SSH_USER }}@$INSTANCE_IP << 'EOF'
+            set -e
+
+            # Navigate to application directory (adjust path as needed)
+            cd ~/Deepak || cd ~/app || cd /var/www/deepak
+
+            # Pull latest changes
+            echo "Pulling latest changes..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Install dependencies
+            echo "Installing dependencies..."
+            bun install
+
+            # Run database migrations
+            echo "Running database migrations..."
+            bun run db:migrate || true
+
+            # Build the application
+            echo "Building application..."
+            bun run build || true
+
+            # Restart the application using PM2
+            echo "Restarting application..."
+            if command -v pm2 &> /dev/null; then
+              pm2 restart deepak-portfolio || pm2 start bun --name deepak-portfolio -- run start
+              pm2 save
+            else
+              # If PM2 not installed, use systemd or simple restart
+              if sudo systemctl list-units --full -all | grep -q deepak.service; then
+                sudo systemctl restart deepak
+              else
+                echo "Warning: No process manager found. Application may need manual restart."
+                pkill -f "bun.*src/index.tsx" || true
+                nohup bun run start > /tmp/deepak.log 2>&1 &
+              fi
+            fi
+
+            echo "Deployment completed successfully!"
+          EOF
+
+      - name: Verify deployment
+        env:
+          INSTANCE_IP: ${{ steps.get-ip.outputs.ip }}
+        run: |
+          echo "Waiting for application to start..."
+          sleep 5
+
+          # Try to curl the application (adjust port as needed)
+          if curl -f http://$INSTANCE_IP:3000 || curl -f http://$INSTANCE_IP; then
+            echo "✅ Application is running!"
+          else
+            echo "⚠️ Application might not be accessible yet. Check server logs."
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/gcp_key

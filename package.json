@@ -7,7 +7,9 @@
     "setup": "bun src/database/setup.ts",
     "dev": "bun --hot src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
-    "build": "bun run build.ts"
+    "build": "bun run build.ts",
+    "db:migrate": "bun src/database/db.ts",
+    "deploy": "git pull && bun install && bun run build && pm2 restart deepak-portfolio || pm2 start bun --name deepak-portfolio -- run start"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
