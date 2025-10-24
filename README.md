@@ -1,6 +1,6 @@
 # Dr. Deepak Mehta - Medical Portfolio Website
 
-A modern, fully-featured portfolio website built with Bun, React 19, and SQLite. This project includes a public-facing portfolio and a complete admin dashboard for content management.
+A modern, fully-featured portfolio website built with Bun, React 19, and PostgreSQL. This project includes a public-facing portfolio and a complete admin dashboard for content management with image upload capabilities.
 
 ## Features
 
@@ -13,11 +13,21 @@ A modern, fully-featured portfolio website built with Bun, React 19, and SQLite.
 - **Contact**: Contact information and location details
 - **Blog**: Display published blog posts
 - **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Database-driven**: All content loaded from PostgreSQL database
 
 ### Admin Dashboard
-- **Secure Authentication**: Session-based login system
-- **Profile Management**: Edit doctor information, photo, and stats
+- **Secure Authentication**: Session-based login system with hashed passwords
+- **Profile Management**: Edit doctor information with image upload
+- **Image Upload**: Upload and manage images (profile photos, portfolio items)
+  - Drag-and-drop file upload
+  - Automatic image preview
+  - Server-side storage in `/uploads` directory
+  - 5MB file size limit
+  - Support for JPG, PNG, GIF, WebP formats
 - **Content Management**: Full CRUD operations for all sections
+  - Services, Education, Experience, Skills, Awards
+  - Portfolio items with image uploads
+  - Blog posts, Social links, Contact information
 - **Appointment Management**: View and manage appointment requests
 - **No Hardcoded Values**: All content is editable through the admin panel
 
@@ -26,11 +36,17 @@ A modern, fully-featured portfolio website built with Bun, React 19, and SQLite.
 - **Runtime**: Bun
 - **Frontend**: React 19, TypeScript
 - **Styling**: Tailwind CSS 4
-- **Database**: SQLite (via Bun.sql)
-- **Server**: Bun.serve() with built-in routing
+- **Database**: PostgreSQL (via Neon serverless)
+- **Server**: Bun.serve() with built-in routing and static file serving
 - **Authentication**: Session-based with HTTP-only cookies
+- **File Storage**: Server-side image uploads
 
 ## Getting Started
+
+### Prerequisites
+
+- Bun runtime installed
+- Neon PostgreSQL database (https://neon.tech)
 
 ### Installation
 
@@ -39,7 +55,23 @@ A modern, fully-featured portfolio website built with Bun, React 19, and SQLite.
 bun install
 ```
 
-2. Start the development server:
+2. Configure database:
+```bash
+# Create .env file with your Neon database URL
+DATABASE_URL='postgresql://user:password@host.neon.tech/dbname?sslmode=require'
+```
+
+3. Initialize and seed the database:
+```bash
+bun run setup
+```
+
+This will:
+- Create all database tables
+- Prompt you to create an admin username and password
+- Seed initial sample data
+
+4. Start the development server:
 ```bash
 bun run dev
 ```
@@ -47,6 +79,12 @@ bun run dev
 The application will be available at:
 - **Public site**: http://localhost:3000
 - **Admin panel**: http://localhost:3000/admin
+
+### Default Admin Access
+
+After running `bun run setup`, login with the credentials you created during the setup process.
+
+**Security Note**: Make sure to use a strong password for your admin account!
 
 ### Default Admin Credentials
 - **Username**: `admin`
