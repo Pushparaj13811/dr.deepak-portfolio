@@ -1,7 +1,6 @@
 import { serve } from "bun";
 import index from "./index.html";
-import { initDatabase } from "./database/db";
-import { seedDatabase } from "./database/seed";
+import { initDatabase, isDatabaseSeeded } from "./database/db";
 import { cleanupExpiredSessions } from "./server/auth/session";
 
 // Public API routes
@@ -55,19 +54,50 @@ import {
   updateAppointmentStatus,
 } from "./server/routes/admin";
 
+// Upload routes
+import { uploadImage, deleteImage } from "./server/routes/upload";
+
 import { requireAuth } from "./server/middleware/auth";
 
-// Initialize database
-initDatabase();
+// Initialize database (create tables if they don't exist)
+await initDatabase();
 
-// Seed database with default data
-await seedDatabase();
+// Check if database is seeded
+const isSeeded = await isDatabaseSeeded();
+if (!isSeeded) {
+  console.log("\n⚠️  WARNING: Database is not seeded!");
+  console.log("   Run 'bun run setup' to initialize the database with admin user and sample data.\n");
+}
 
 // Cleanup expired sessions every hour
 setInterval(cleanupExpiredSessions, 1000 * 60 * 60);
 
+// Handler for serving uploaded images
+async function serveUploadedFile(req: Request & { params?: { filename?: string } }): Promise<Response> {
+  const filename = req.params?.filename || req.url.split('/uploads/')[1];
+  if (!filename) {
+    return new Response("File not found", { status: 404 });
+  }
+
+  const filepath = `./uploads/${filename}`;
+  const file = Bun.file(filepath);
+  const exists = await file.exists();
+
+  if (exists) {
+    return new Response(file);
+  }
+  return new Response("File not found", { status: 404 });
+}
+
 const server = serve({
   routes: {
+    // Serve uploaded images - MUST be before catch-all route
+    "/uploads/:filename": { GET: serveUploadedFile },
+
+    // Upload routes
+    "/api/upload": { POST: requireAuth(uploadImage) },
+    "/api/upload/:filename": { DELETE: requireAuth(deleteImage) },
+
     // Public API routes
     "/api/profile": { GET: getProfile },
     "/api/services": { GET: getServices },
@@ -163,7 +193,7 @@ const server = serve({
   },
 });
 
-console.log(`✅ Database initialized and seeded`);
+console.log(`✅ Database initialized`);
 console.log(`🚀 Server running at ${server.url}`);
 console.log(`📱 Public site: ${server.url}`);
 console.log(`🔐 Admin panel: ${server.url}/admin`);
