@@ -1,5 +1,5 @@
 import sql from "../../database/db";
-import { createSession, deleteSession, getSessionFromRequest, setSessionCookie, clearSessionCookie, verifyPassword } from "../auth/session";
+import { createSession, deleteSession, getSessionFromRequest, setSessionCookie, clearSessionCookie, verifyPassword, hashPassword } from "../auth/session";
 import type { LoginRequest, ApiResponse, ProfileFormData, ServiceFormData, EducationFormData, ExperienceFormData, SkillFormData, AwardFormData, PortfolioFormData, ContactFormData, SocialLinkFormData, BlogPostFormData } from "../../types";
 
 // POST /api/admin/login
@@ -538,5 +538,79 @@ export async function updateAppointmentStatus(req: Request): Promise<Response> {
     return Response.json({ success: true, message: "Appointment status updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update appointment" } as ApiResponse, { status: 500 });
+  }
+}
+
+// POST /api/admin/change-password
+export async function changePassword(req: Request): Promise<Response> {
+  try {
+    const sessionId = getSessionFromRequest(req);
+    if (!sessionId) {
+      return Response.json({
+        success: false,
+        error: "Unauthorized",
+      } as ApiResponse, { status: 401 });
+    }
+
+    const body = await req.json() as { currentPassword: string; newPassword: string };
+
+    // Get current user from session
+    const session = await sql`
+      SELECT * FROM sessions WHERE id = ${sessionId} AND expires_at > NOW()
+    `;
+
+    if (session.length === 0) {
+      return Response.json({
+        success: false,
+        error: "Session expired",
+      } as ApiResponse, { status: 401 });
+    }
+
+    const userId = (session[0] as any).user_id;
+
+    // Get user's current password hash
+    const users = await sql`
+      SELECT * FROM admin_users WHERE id = ${userId}
+    `;
+
+    if (users.length === 0) {
+      return Response.json({
+        success: false,
+        error: "User not found",
+      } as ApiResponse, { status: 404 });
+    }
+
+    const user = users[0] as any;
+
+    // Verify current password
+    const isValidPassword = await verifyPassword(body.currentPassword, user.password_hash);
+
+    if (!isValidPassword) {
+      return Response.json({
+        success: false,
+        error: "Current password is incorrect",
+      } as ApiResponse, { status: 401 });
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(body.newPassword);
+
+    // Update password
+    await sql`
+      UPDATE admin_users
+      SET password_hash = ${newPasswordHash}
+      WHERE id = ${userId}
+    `;
+
+    return Response.json({
+      success: true,
+      message: "Password changed successfully",
+    } as ApiResponse);
+  } catch (error) {
+    console.error("Change password error:", error);
+    return Response.json({
+      success: false,
+      error: "Failed to change password",
+    } as ApiResponse, { status: 500 });
   }
 }

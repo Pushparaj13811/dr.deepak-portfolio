@@ -24,6 +24,7 @@ import {
   login,
   logout,
   getCurrentUser,
+  changePassword,
   updateProfile,
   createService,
   updateService,
@@ -117,6 +118,7 @@ const server = serve({
     "/api/admin/login": { POST: login },
     "/api/admin/logout": { POST: logout },
     "/api/admin/me": { GET: requireAuth(getCurrentUser) },
+    "/api/admin/change-password": { POST: requireAuth(changePassword) },
 
     // Admin Profile routes
     "/api/admin/profile": { PUT: requireAuth(updateProfile) },
