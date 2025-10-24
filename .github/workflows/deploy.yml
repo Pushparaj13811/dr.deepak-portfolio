@@ -63,6 +63,9 @@ jobs:
             # Navigate to application directory
             cd "$APP_DIR"
 
+            # Fix Git ownership issue (if directory was created with sudo)
+            git config --global --add safe.directory "$APP_DIR"
+
             # Pull latest changes
             echo "Pulling latest changes..."
             git fetch origin main

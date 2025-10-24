@@ -129,6 +129,9 @@ fi
 
 cd \$HOME/Deepak
 
+# Fix Git ownership issue
+git config --global --add safe.directory "\$HOME/Deepak"
+
 echo ""
 echo "Step 4: Creating environment file..."
 
