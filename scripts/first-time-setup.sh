@@ -9,7 +9,8 @@ echo ""
 PROJECT_ID="mindspace-468015"
 INSTANCE_NAME="instance-20250804-164027"
 ZONE="us-central1-c"
-APP_DIR="Deepak"
+DEPLOY_USER="github-deploy"
+APP_DIR="/home/$DEPLOY_USER/Deepak"
 GITHUB_REPO="https://github.com/Pushparaj13811/dr.deepak-portfolio.git"
 
 echo "This script will set up your GCP instance for deployment."
@@ -18,7 +19,8 @@ echo "Configuration:"
 echo "  Project: $PROJECT_ID"
 echo "  Instance: $INSTANCE_NAME"
 echo "  Zone: $ZONE"
-echo "  App Directory: ~/$APP_DIR"
+echo "  Deploy User: $DEPLOY_USER"
+echo "  App Directory: $APP_DIR"
 echo ""
 
 # Get instance IP
@@ -68,7 +70,24 @@ gcloud compute ssh $INSTANCE_NAME \
 
 set -e
 
-echo "Step 1: Installing required software..."
+echo "Step 1: Checking if github-deploy user exists..."
+
+if ! id $DEPLOY_USER &>/dev/null; then
+    echo "❌ User $DEPLOY_USER does not exist!"
+    echo "Please run the GitHub secrets setup first to create the SSH user:"
+    echo "  bash /tmp/setup_github_secrets.sh"
+    exit 1
+fi
+
+echo "✅ User $DEPLOY_USER exists"
+echo ""
+
+echo "Step 2: Installing required software for $DEPLOY_USER user..."
+
+# Switch to github-deploy user for all setup
+sudo -u $DEPLOY_USER bash << 'USEREOF'
+
+set -e
 
 # Install Bun if not installed
 if ! command -v bun &> /dev/null; then
@@ -95,33 +114,23 @@ else
     echo "✅ PM2 is already installed"
 fi
 
-# Install Git if not installed
-if ! command -v git &> /dev/null; then
-    echo "Installing Git..."
-    sudo apt update
-    sudo apt install -y git
-else
-    echo "✅ Git is already installed"
-fi
-
 echo ""
-echo "Step 2: Setting up application directory..."
+echo "Step 3: Setting up application directory..."
 
 # Create application directory if it doesn't exist
-if [ ! -d "$APP_DIR" ]; then
+if [ ! -d "\$HOME/Deepak" ]; then
     echo "Cloning repository..."
-    git clone $GITHUB_REPO $APP_DIR
+    git clone $GITHUB_REPO \$HOME/Deepak
 else
     echo "✅ Directory already exists, pulling latest changes..."
-    cd $APP_DIR
+    cd \$HOME/Deepak
     git pull
-    cd ~
 fi
 
-cd $APP_DIR
+cd \$HOME/Deepak
 
 echo ""
-echo "Step 3: Creating environment file..."
+echo "Step 4: Creating environment file..."
 
 # Create .env file
 cat > .env << 'ENVEOF'
@@ -139,19 +148,19 @@ sed -i "s|\\\$SESSION_SECRET|$SESSION_SECRET|g" .env
 echo "✅ Environment file created"
 
 echo ""
-echo "Step 4: Installing dependencies..."
+echo "Step 5: Installing dependencies..."
 bun install
 
 echo ""
-echo "Step 5: Setting up database..."
+echo "Step 6: Setting up database..."
 bun run setup
 
 echo ""
-echo "Step 6: Building application..."
+echo "Step 7: Building application..."
 bun run build || echo "⚠️ Build step optional"
 
 echo ""
-echo "Step 7: Starting application with PM2..."
+echo "Step 8: Starting application with PM2..."
 
 # Stop existing PM2 process if running
 pm2 stop deepak-portfolio 2>/dev/null || true
@@ -163,19 +172,25 @@ pm2 start bun --name deepak-portfolio -- run start
 # Save PM2 process list
 pm2 save
 
-# Set up PM2 to start on system boot
-pm2 startup | tail -n 1 | bash || echo "⚠️ PM2 startup setup may require manual intervention"
-
 echo ""
 echo "✅ Application started successfully!"
-echo ""
-echo "Step 8: Installing Nginx (if needed)..."
 
-# Check if nginx setup script exists
-if [ -f "scripts/setup-nginx.sh" ]; then
+USEREOF
+
+# Set up PM2 to start on system boot (needs sudo, so run outside of user context)
+echo ""
+echo "Step 9: Setting up PM2 startup (requires sudo)..."
+sudo -u $DEPLOY_USER bash << 'PMEOF'
+pm2 startup | tail -n 1
+PMEOF
+
+echo ""
+echo "Step 10: Installing Nginx (if needed)..."
+
+# Check if nginx setup script exists in the app directory
+if sudo test -f /home/$DEPLOY_USER/Deepak/scripts/setup-nginx.sh; then
     echo "Running Nginx setup..."
-    chmod +x scripts/setup-nginx.sh
-    sudo bash scripts/setup-nginx.sh || echo "⚠️ Nginx setup requires manual intervention"
+    sudo bash /home/$DEPLOY_USER/Deepak/scripts/setup-nginx.sh || echo "⚠️ Nginx setup requires manual intervention"
 else
     echo "⚠️ Nginx setup script not found. You'll need to set up Nginx manually."
 fi
@@ -193,6 +208,8 @@ if [ $? -eq 0 ]; then
     echo "================================================"
     echo "✅ Application deployed to: $INSTANCE_IP"
     echo "✅ Application running on port: 3002"
+    echo "✅ Deploy user: $DEPLOY_USER"
+    echo "✅ App directory: $APP_DIR"
     echo "✅ PM2 process name: deepak-portfolio"
     echo ""
     echo "Access your application:"
@@ -201,11 +218,11 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "Next steps:"
     echo "1. Configure DNS to point deepak.hpm.com.np to $INSTANCE_IP"
-    echo "2. Set up SSL certificate (SSH to server and run: sudo bash ~/Deepak/scripts/setup-ssl.sh)"
-    echo "3. Add GitHub secrets for automated deployment"
+    echo "2. Set up SSL certificate (SSH to server and run: sudo bash $APP_DIR/scripts/setup-ssl.sh)"
+    echo "3. Make sure GitHub secrets are configured (GCP_SA_KEY, GCP_SSH_PRIVATE_KEY, GCP_SSH_USER)"
     echo "4. Push to main branch to trigger automated deployments"
     echo ""
-    echo "Useful commands (run via SSH):"
+    echo "Useful commands (run via SSH as $DEPLOY_USER):"
     echo "  pm2 status           - Check application status"
     echo "  pm2 logs deepak-portfolio - View application logs"
     echo "  pm2 restart deepak-portfolio - Restart application"
