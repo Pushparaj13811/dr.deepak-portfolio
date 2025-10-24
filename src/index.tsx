@@ -90,6 +90,7 @@ async function serveUploadedFile(req: Request & { params?: { filename?: string }
 }
 
 const server = serve({
+  port: process.env.PORT ? parseInt(process.env.PORT) : 3002,
   routes: {
     // Serve uploaded images - MUST be before catch-all route
     "/uploads/:filename": { GET: serveUploadedFile },
