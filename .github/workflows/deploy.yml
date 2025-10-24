@@ -74,6 +74,20 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
+            # Check if Bun is installed, install if not
+            if ! command -v bun &> /dev/null; then
+                echo "Bun not found, installing..."
+                curl -fsSL https://bun.sh/install | bash
+                export BUN_INSTALL="$HOME/.bun"
+                export PATH="$BUN_INSTALL/bin:$PATH"
+            else
+                echo "✅ Bun is installed"
+            fi
+
+            # Ensure Bun is in PATH
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+
             # Install dependencies
             echo "Installing dependencies..."
             bun install
@@ -86,21 +100,18 @@ jobs:
             echo "Building application..."
             bun run build || true
 
+            # Check if PM2 is installed, install if not
+            if ! command -v pm2 &> /dev/null; then
+                echo "PM2 not found, installing..."
+                bun install -g pm2
+            else
+                echo "✅ PM2 is installed"
+            fi
+
             # Restart the application using PM2
             echo "Restarting application..."
-            if command -v pm2 &> /dev/null; then
-              pm2 restart deepak-portfolio || pm2 start bun --name deepak-portfolio -- run start
-              pm2 save
-            else
-              # If PM2 not installed, use systemd or simple restart
-              if sudo systemctl list-units --full -all | grep -q deepak.service; then
-                sudo systemctl restart deepak
-              else
-                echo "Warning: No process manager found. Application may need manual restart."
-                pkill -f "bun.*src/index.tsx" || true
-                nohup bun run start > /tmp/deepak.log 2>&1 &
-              fi
-            fi
+            pm2 restart deepak-portfolio || pm2 start bun --name deepak-portfolio -- run start
+            pm2 save
 
             echo "Deployment completed successfully!"
           EOF
