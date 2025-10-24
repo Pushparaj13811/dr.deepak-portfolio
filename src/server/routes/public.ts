@@ -1,4 +1,4 @@
-import { db } from "../../database/db";
+import sql from "../../database/db";
 import type {
   Profile,
   Service,
@@ -17,7 +17,8 @@ import type {
 // GET /api/profile
 export async function getProfile(req: Request): Promise<Response> {
   try {
-    const profile = db.prepare("SELECT * FROM profile WHERE id = 1").get() as Profile | null;
+    const result = await sql<Profile[]>`SELECT * FROM profile WHERE id = 1`;
+    const profile = result[0] || null;
 
     return Response.json({
       success: true,
@@ -34,9 +35,9 @@ export async function getProfile(req: Request): Promise<Response> {
 // GET /api/services
 export async function getServices(req: Request): Promise<Response> {
   try {
-    const services = db.prepare(
-      "SELECT * FROM services ORDER BY display_order ASC"
-    ).all() as Service[];
+    const services = await sql<Service[]>`
+      SELECT * FROM services ORDER BY display_order ASC
+    `;
 
     return Response.json({
       success: true,
@@ -53,9 +54,9 @@ export async function getServices(req: Request): Promise<Response> {
 // GET /api/education
 export async function getEducation(req: Request): Promise<Response> {
   try {
-    const education = db.prepare(
-      "SELECT * FROM education ORDER BY display_order ASC"
-    ).all() as Education[];
+    const education = await sql<Education[]>`
+      SELECT * FROM education ORDER BY display_order ASC
+    `;
 
     return Response.json({
       success: true,
@@ -72,9 +73,9 @@ export async function getEducation(req: Request): Promise<Response> {
 // GET /api/experience
 export async function getExperience(req: Request): Promise<Response> {
   try {
-    const experience = db.prepare(
-      "SELECT * FROM experience ORDER BY display_order ASC"
-    ).all() as Experience[];
+    const experience = await sql<Experience[]>`
+      SELECT * FROM experience ORDER BY display_order ASC
+    `;
 
     return Response.json({
       success: true,
@@ -91,9 +92,9 @@ export async function getExperience(req: Request): Promise<Response> {
 // GET /api/skills
 export async function getSkills(req: Request): Promise<Response> {
   try {
-    const skills = db.prepare(
-      "SELECT * FROM skills ORDER BY display_order ASC"
-    ).all() as Skill[];
+    const skills = await sql<Skill[]>`
+      SELECT * FROM skills ORDER BY display_order ASC
+    `;
 
     return Response.json({
       success: true,
@@ -110,9 +111,9 @@ export async function getSkills(req: Request): Promise<Response> {
 // GET /api/awards
 export async function getAwards(req: Request): Promise<Response> {
   try {
-    const awards = db.prepare(
-      "SELECT * FROM awards ORDER BY display_order ASC"
-    ).all() as Award[];
+    const awards = await sql<Award[]>`
+      SELECT * FROM awards ORDER BY display_order ASC
+    `;
 
     return Response.json({
       success: true,
@@ -132,17 +133,19 @@ export async function getPortfolio(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const category = url.searchParams.get("category");
 
-    let query = "SELECT * FROM portfolio_items";
-    const params: any[] = [];
+    let portfolio: PortfolioItem[];
 
     if (category && category !== "All Work") {
-      query += " WHERE category = ?";
-      params.push(category);
+      portfolio = await sql<PortfolioItem[]>`
+        SELECT * FROM portfolio_items
+        WHERE category = ${category}
+        ORDER BY display_order ASC
+      `;
+    } else {
+      portfolio = await sql<PortfolioItem[]>`
+        SELECT * FROM portfolio_items ORDER BY display_order ASC
+      `;
     }
-
-    query += " ORDER BY display_order ASC";
-
-    const portfolio = db.prepare(query).all(...params) as PortfolioItem[];
 
     return Response.json({
       success: true,
@@ -159,7 +162,8 @@ export async function getPortfolio(req: Request): Promise<Response> {
 // GET /api/contact
 export async function getContact(req: Request): Promise<Response> {
   try {
-    const contact = db.prepare("SELECT * FROM contact_info WHERE id = 1").get() as ContactInfo | null;
+    const result = await sql<ContactInfo[]>`SELECT * FROM contact_info WHERE id = 1`;
+    const contact = result[0] || null;
 
     return Response.json({
       success: true,
@@ -176,9 +180,9 @@ export async function getContact(req: Request): Promise<Response> {
 // GET /api/social-links
 export async function getSocialLinks(req: Request): Promise<Response> {
   try {
-    const links = db.prepare(
-      "SELECT * FROM social_links ORDER BY display_order ASC"
-    ).all() as SocialLink[];
+    const links = await sql<SocialLink[]>`
+      SELECT * FROM social_links ORDER BY display_order ASC
+    `;
 
     return Response.json({
       success: true,
@@ -195,9 +199,9 @@ export async function getSocialLinks(req: Request): Promise<Response> {
 // GET /api/blog
 export async function getBlogPosts(req: Request): Promise<Response> {
   try {
-    const posts = db.prepare(
-      "SELECT * FROM blog_posts WHERE published = 1 ORDER BY created_at DESC"
-    ).all() as BlogPost[];
+    const posts = await sql<BlogPost[]>`
+      SELECT * FROM blog_posts WHERE published = true ORDER BY created_at DESC
+    `;
 
     return Response.json({
       success: true,
@@ -222,9 +226,10 @@ export async function getBlogPost(req: Request): Promise<Response> {
       } as ApiResponse, { status: 400 });
     }
 
-    const post = db.prepare(
-      "SELECT * FROM blog_posts WHERE slug = ? AND published = 1"
-    ).get(slug) as BlogPost | null;
+    const result = await sql<BlogPost[]>`
+      SELECT * FROM blog_posts WHERE slug = ${slug} AND published = true
+    `;
+    const post = result[0] || null;
 
     if (!post) {
       return Response.json({
@@ -259,15 +264,16 @@ export async function createAppointment(req: Request): Promise<Response> {
     }
 
     // Insert appointment
-    const result = db.prepare(`
+    const result = await sql<{ id: number }[]>`
       INSERT INTO appointments (full_name, email, phone, message, status)
-      VALUES (?, ?, ?, ?, 'pending')
-    `).run(body.full_name, body.email, body.phone || null, body.message || null);
+      VALUES (${body.full_name}, ${body.email}, ${body.phone || null}, ${body.message || null}, 'pending')
+      RETURNING id
+    `;
 
     return Response.json({
       success: true,
       message: "Appointment request submitted successfully",
-      data: { id: result.lastInsertRowid },
+      data: { id: result[0].id },
     } as ApiResponse);
   } catch (error) {
     return Response.json({

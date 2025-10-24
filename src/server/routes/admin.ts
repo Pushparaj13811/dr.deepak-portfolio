@@ -1,4 +1,4 @@
-import { db } from "../../database/db";
+import sql from "../../database/db";
 import { createSession, deleteSession, getSessionFromRequest, setSessionCookie, clearSessionCookie, verifyPassword } from "../auth/session";
 import type { LoginRequest, ApiResponse, ProfileFormData, ServiceFormData, EducationFormData, ExperienceFormData, SkillFormData, AwardFormData, PortfolioFormData, ContactFormData, SocialLinkFormData, BlogPostFormData } from "../../types";
 
@@ -7,9 +7,10 @@ export async function login(req: Request): Promise<Response> {
   try {
     const body = await req.json() as LoginRequest;
 
-    const user = db.prepare(
-      "SELECT * FROM admin_users WHERE username = ?"
-    ).get(body.username) as any;
+    const users = await sql`
+      SELECT * FROM admin_users WHERE username = ${body.username}
+    `;
+    const user = users[0] as any;
 
     if (!user) {
       return Response.json({
@@ -27,7 +28,7 @@ export async function login(req: Request): Promise<Response> {
       } as ApiResponse, { status: 401 });
     }
 
-    const sessionId = createSession(user.id);
+    const sessionId = await createSession(user.id);
 
     return new Response(
       JSON.stringify({
@@ -54,7 +55,7 @@ export async function login(req: Request): Promise<Response> {
 export async function logout(req: Request): Promise<Response> {
   const sessionId = getSessionFromRequest(req);
   if (sessionId) {
-    deleteSession(sessionId);
+    await deleteSession(sessionId);
   }
 
   return new Response(
@@ -85,48 +86,28 @@ export async function updateProfile(req: Request): Promise<Response> {
   try {
     const body = await req.json() as Partial<ProfileFormData>;
 
-    const updates: string[] = [];
-    const params: any[] = [];
-
-    if (body.full_name !== undefined) {
-      updates.push("full_name = ?");
-      params.push(body.full_name);
-    }
-    if (body.title !== undefined) {
-      updates.push("title = ?");
-      params.push(body.title);
-    }
-    if (body.tagline !== undefined) {
-      updates.push("tagline = ?");
-      params.push(body.tagline);
-    }
-    if (body.about_text !== undefined) {
-      updates.push("about_text = ?");
-      params.push(body.about_text);
-    }
-    if (body.photo_url !== undefined) {
-      updates.push("photo_url = ?");
-      params.push(body.photo_url);
-    }
-    if (body.years_experience !== undefined) {
-      updates.push("years_experience = ?");
-      params.push(body.years_experience);
-    }
-    if (body.surgeries_count !== undefined) {
-      updates.push("surgeries_count = ?");
-      params.push(body.surgeries_count);
-    }
-
-    updates.push("updated_at = datetime('now')");
-    params.push(1); // WHERE id = 1
-
-    db.prepare(`UPDATE profile SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+    await sql`
+      UPDATE profile
+      SET
+        full_name = ${body.full_name ?? null},
+        title = ${body.title ?? null},
+        tagline = ${body.tagline ?? null},
+        about_text_short = ${body.about_text_short ?? null},
+        about_text = ${body.about_text ?? null},
+        specialization = ${body.specialization ?? null},
+        photo_base64 = ${body.photo_base64 ?? null},
+        years_experience = ${body.years_experience ?? 0},
+        surgeries_count = ${body.surgeries_count ?? 0},
+        updated_at = NOW()
+      WHERE id = 1
+    `;
 
     return Response.json({
       success: true,
       message: "Profile updated successfully",
     } as ApiResponse);
   } catch (error) {
+    console.error("Profile update error:", error);
     return Response.json({
       success: false,
       error: "Failed to update profile",
@@ -139,14 +120,16 @@ export async function createService(req: Request): Promise<Response> {
   try {
     const body = await req.json() as ServiceFormData;
 
-    const result = db.prepare(`
-      INSERT INTO services (title, description, icon) VALUES (?, ?, ?)
-    `).run(body.title, body.description || null, body.icon || null);
+    const result = await sql`
+      INSERT INTO services (title, description, icon)
+      VALUES (${body.title}, ${body.description || null}, ${body.icon || null})
+      RETURNING id
+    `;
 
     return Response.json({
       success: true,
       message: "Service created successfully",
-      data: { id: result.lastInsertRowid },
+      data: { id: result[0].id },
     } as ApiResponse);
   } catch (error) {
     return Response.json({
@@ -161,11 +144,11 @@ export async function updateService(req: Request): Promise<Response> {
     const id = req.params?.id;
     const body = await req.json() as Partial<ServiceFormData>;
 
-    db.prepare(`
+    await sql`
       UPDATE services
-      SET title = ?, description = ?, icon = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(body.title, body.description || null, body.icon || null, id);
+      SET title = ${body.title}, description = ${body.description || null}, icon = ${body.icon || null}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
 
     return Response.json({
       success: true,
@@ -182,7 +165,7 @@ export async function updateService(req: Request): Promise<Response> {
 export async function deleteService(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM services WHERE id = ?").run(id);
+    await sql`DELETE FROM services WHERE id = ${id}`;
 
     return Response.json({
       success: true,
@@ -201,15 +184,16 @@ export async function createEducation(req: Request): Promise<Response> {
   try {
     const body = await req.json() as EducationFormData;
 
-    const result = db.prepare(`
+    const result = await sql`
       INSERT INTO education (degree, institution, year, description)
-      VALUES (?, ?, ?, ?)
-    `).run(body.degree, body.institution, body.year || null, body.description || null);
+      VALUES (${body.degree}, ${body.institution}, ${body.year || null}, ${body.description || null})
+      RETURNING id
+    `;
 
     return Response.json({
       success: true,
       message: "Education created successfully",
-      data: { id: result.lastInsertRowid },
+      data: { id: result[0].id },
     } as ApiResponse);
   } catch (error) {
     return Response.json({
@@ -224,11 +208,11 @@ export async function updateEducation(req: Request): Promise<Response> {
     const id = req.params?.id;
     const body = await req.json() as Partial<EducationFormData>;
 
-    db.prepare(`
+    await sql`
       UPDATE education
-      SET degree = ?, institution = ?, year = ?, description = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(body.degree, body.institution, body.year || null, body.description || null, id);
+      SET degree = ${body.degree}, institution = ${body.institution}, year = ${body.year || null}, description = ${body.description || null}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
 
     return Response.json({
       success: true,
@@ -245,7 +229,7 @@ export async function updateEducation(req: Request): Promise<Response> {
 export async function deleteEducation(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM education WHERE id = ?").run(id);
+    await sql`DELETE FROM education WHERE id = ${id}`;
 
     return Response.json({
       success: true,
@@ -264,15 +248,16 @@ export async function createExperience(req: Request): Promise<Response> {
   try {
     const body = await req.json() as ExperienceFormData;
 
-    const result = db.prepare(`
+    const result = await sql`
       INSERT INTO experience (position, organization, start_date, end_date, description)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(body.position, body.organization, body.start_date || null, body.end_date || null, body.description || null);
+      VALUES (${body.position}, ${body.organization}, ${body.start_date || null}, ${body.end_date || null}, ${body.description || null})
+      RETURNING id
+    `;
 
     return Response.json({
       success: true,
       message: "Experience created successfully",
-      data: { id: result.lastInsertRowid },
+      data: { id: result[0].id },
     } as ApiResponse);
   } catch (error) {
     return Response.json({
@@ -287,11 +272,11 @@ export async function updateExperience(req: Request): Promise<Response> {
     const id = req.params?.id;
     const body = await req.json() as Partial<ExperienceFormData>;
 
-    db.prepare(`
+    await sql`
       UPDATE experience
-      SET position = ?, organization = ?, start_date = ?, end_date = ?, description = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(body.position, body.organization, body.start_date || null, body.end_date || null, body.description || null, id);
+      SET position = ${body.position}, organization = ${body.organization}, start_date = ${body.start_date || null}, end_date = ${body.end_date || null}, description = ${body.description || null}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
 
     return Response.json({
       success: true,
@@ -308,7 +293,7 @@ export async function updateExperience(req: Request): Promise<Response> {
 export async function deleteExperience(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM experience WHERE id = ?").run(id);
+    await sql`DELETE FROM experience WHERE id = ${id}`;
 
     return Response.json({
       success: true,
@@ -326,11 +311,13 @@ export async function deleteExperience(req: Request): Promise<Response> {
 export async function createSkill(req: Request): Promise<Response> {
   try {
     const body = await req.json() as SkillFormData;
-    const result = db.prepare(`
-      INSERT INTO skills (name, proficiency, category) VALUES (?, ?, ?)
-    `).run(body.name, body.proficiency, body.category || null);
+    const result = await sql`
+      INSERT INTO skills (name, proficiency, category)
+      VALUES (${body.name}, ${body.proficiency}, ${body.category || null})
+      RETURNING id
+    `;
 
-    return Response.json({ success: true, message: "Skill created", data: { id: result.lastInsertRowid } } as ApiResponse);
+    return Response.json({ success: true, message: "Skill created", data: { id: result[0].id } } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to create skill" } as ApiResponse, { status: 500 });
   }
@@ -340,8 +327,11 @@ export async function updateSkill(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
     const body = await req.json() as Partial<SkillFormData>;
-    db.prepare(`UPDATE skills SET name = ?, proficiency = ?, category = ?, updated_at = datetime('now') WHERE id = ?`)
-      .run(body.name, body.proficiency, body.category || null, id);
+    await sql`
+      UPDATE skills
+      SET name = ${body.name}, proficiency = ${body.proficiency}, category = ${body.category || null}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
     return Response.json({ success: true, message: "Skill updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update skill" } as ApiResponse, { status: 500 });
@@ -351,7 +341,7 @@ export async function updateSkill(req: Request): Promise<Response> {
 export async function deleteSkill(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM skills WHERE id = ?").run(id);
+    await sql`DELETE FROM skills WHERE id = ${id}`;
     return Response.json({ success: true, message: "Skill deleted" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to delete skill" } as ApiResponse, { status: 500 });
@@ -362,9 +352,12 @@ export async function deleteSkill(req: Request): Promise<Response> {
 export async function createAward(req: Request): Promise<Response> {
   try {
     const body = await req.json() as AwardFormData;
-    const result = db.prepare(`INSERT INTO awards (title, issuer, year, description) VALUES (?, ?, ?, ?)`)
-      .run(body.title, body.issuer || null, body.year || null, body.description || null);
-    return Response.json({ success: true, message: "Award created", data: { id: result.lastInsertRowid } } as ApiResponse);
+    const result = await sql`
+      INSERT INTO awards (title, issuer, year, description, image_base64)
+      VALUES (${body.title}, ${body.issuer || null}, ${body.year || null}, ${body.description || null}, ${body.image_base64 || null})
+      RETURNING id
+    `;
+    return Response.json({ success: true, message: "Award created", data: { id: result[0].id } } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to create award" } as ApiResponse, { status: 500 });
   }
@@ -374,8 +367,11 @@ export async function updateAward(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
     const body = await req.json() as Partial<AwardFormData>;
-    db.prepare(`UPDATE awards SET title = ?, issuer = ?, year = ?, description = ?, updated_at = datetime('now') WHERE id = ?`)
-      .run(body.title, body.issuer || null, body.year || null, body.description || null, id);
+    await sql`
+      UPDATE awards
+      SET title = ${body.title}, issuer = ${body.issuer || null}, year = ${body.year || null}, description = ${body.description || null}, image_base64 = ${body.image_base64 || null}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
     return Response.json({ success: true, message: "Award updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update award" } as ApiResponse, { status: 500 });
@@ -385,7 +381,7 @@ export async function updateAward(req: Request): Promise<Response> {
 export async function deleteAward(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM awards WHERE id = ?").run(id);
+    await sql`DELETE FROM awards WHERE id = ${id}`;
     return Response.json({ success: true, message: "Award deleted" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to delete award" } as ApiResponse, { status: 500 });
@@ -395,9 +391,12 @@ export async function deleteAward(req: Request): Promise<Response> {
 export async function createPortfolioItem(req: Request): Promise<Response> {
   try {
     const body = await req.json() as PortfolioFormData;
-    const result = db.prepare(`INSERT INTO portfolio_items (title, description, image_url, category) VALUES (?, ?, ?, ?)`)
-      .run(body.title, body.description || null, body.image_url, body.category);
-    return Response.json({ success: true, message: "Portfolio item created", data: { id: result.lastInsertRowid } } as ApiResponse);
+    const result = await sql`
+      INSERT INTO portfolio_items (title, description, image_base64, category)
+      VALUES (${body.title}, ${body.description || null}, ${body.image_base64}, ${body.category})
+      RETURNING id
+    `;
+    return Response.json({ success: true, message: "Portfolio item created", data: { id: result[0].id } } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to create portfolio item" } as ApiResponse, { status: 500 });
   }
@@ -407,8 +406,11 @@ export async function updatePortfolioItem(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
     const body = await req.json() as Partial<PortfolioFormData>;
-    db.prepare(`UPDATE portfolio_items SET title = ?, description = ?, image_url = ?, category = ?, updated_at = datetime('now') WHERE id = ?`)
-      .run(body.title, body.description || null, body.image_url, body.category, id);
+    await sql`
+      UPDATE portfolio_items
+      SET title = ${body.title}, description = ${body.description || null}, image_base64 = ${body.image_base64}, category = ${body.category}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
     return Response.json({ success: true, message: "Portfolio item updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update portfolio item" } as ApiResponse, { status: 500 });
@@ -418,7 +420,7 @@ export async function updatePortfolioItem(req: Request): Promise<Response> {
 export async function deletePortfolioItem(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM portfolio_items WHERE id = ?").run(id);
+    await sql`DELETE FROM portfolio_items WHERE id = ${id}`;
     return Response.json({ success: true, message: "Portfolio item deleted" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to delete portfolio item" } as ApiResponse, { status: 500 });
@@ -428,8 +430,11 @@ export async function deletePortfolioItem(req: Request): Promise<Response> {
 export async function updateContact(req: Request): Promise<Response> {
   try {
     const body = await req.json() as Partial<ContactFormData>;
-    db.prepare(`UPDATE contact_info SET email = ?, phone = ?, address = ?, working_hours = ?, updated_at = datetime('now') WHERE id = 1`)
-      .run(body.email, body.phone || null, body.address || null, body.working_hours || null);
+    await sql`
+      UPDATE contact_info
+      SET email = ${body.email}, phone = ${body.phone || null}, address = ${body.address || null}, permanent_address = ${body.permanent_address || null}, description = ${body.description || null}, working_hours = ${body.working_hours || null}, updated_at = NOW()
+      WHERE id = 1
+    `;
     return Response.json({ success: true, message: "Contact info updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update contact info" } as ApiResponse, { status: 500 });
@@ -439,9 +444,12 @@ export async function updateContact(req: Request): Promise<Response> {
 export async function createSocialLink(req: Request): Promise<Response> {
   try {
     const body = await req.json() as SocialLinkFormData;
-    const result = db.prepare(`INSERT INTO social_links (platform, url, icon) VALUES (?, ?, ?)`)
-      .run(body.platform, body.url, body.icon || null);
-    return Response.json({ success: true, message: "Social link created", data: { id: result.lastInsertRowid } } as ApiResponse);
+    const result = await sql`
+      INSERT INTO social_links (platform, url, icon)
+      VALUES (${body.platform}, ${body.url}, ${body.icon || null})
+      RETURNING id
+    `;
+    return Response.json({ success: true, message: "Social link created", data: { id: result[0].id } } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to create social link" } as ApiResponse, { status: 500 });
   }
@@ -451,8 +459,11 @@ export async function updateSocialLink(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
     const body = await req.json() as Partial<SocialLinkFormData>;
-    db.prepare(`UPDATE social_links SET platform = ?, url = ?, icon = ?, updated_at = datetime('now') WHERE id = ?`)
-      .run(body.platform, body.url, body.icon || null, id);
+    await sql`
+      UPDATE social_links
+      SET platform = ${body.platform}, url = ${body.url}, icon = ${body.icon || null}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
     return Response.json({ success: true, message: "Social link updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update social link" } as ApiResponse, { status: 500 });
@@ -462,7 +473,7 @@ export async function updateSocialLink(req: Request): Promise<Response> {
 export async function deleteSocialLink(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM social_links WHERE id = ?").run(id);
+    await sql`DELETE FROM social_links WHERE id = ${id}`;
     return Response.json({ success: true, message: "Social link deleted" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to delete social link" } as ApiResponse, { status: 500 });
@@ -473,11 +484,12 @@ export async function deleteSocialLink(req: Request): Promise<Response> {
 export async function createBlogPost(req: Request): Promise<Response> {
   try {
     const body = await req.json() as BlogPostFormData;
-    const result = db.prepare(`
-      INSERT INTO blog_posts (title, slug, excerpt, content, image_url, published)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(body.title, body.slug, body.excerpt || null, body.content, body.image_url || null, body.published ? 1 : 0);
-    return Response.json({ success: true, message: "Blog post created", data: { id: result.lastInsertRowid } } as ApiResponse);
+    const result = await sql`
+      INSERT INTO blog_posts (title, slug, excerpt, content, image_base64, published)
+      VALUES (${body.title}, ${body.slug}, ${body.excerpt || null}, ${body.content}, ${body.image_base64 || null}, ${body.published})
+      RETURNING id
+    `;
+    return Response.json({ success: true, message: "Blog post created", data: { id: result[0].id } } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to create blog post" } as ApiResponse, { status: 500 });
   }
@@ -487,11 +499,11 @@ export async function updateBlogPost(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
     const body = await req.json() as Partial<BlogPostFormData>;
-    db.prepare(`
+    await sql`
       UPDATE blog_posts
-      SET title = ?, slug = ?, excerpt = ?, content = ?, image_url = ?, published = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(body.title, body.slug, body.excerpt || null, body.content, body.image_url || null, body.published ? 1 : 0, id);
+      SET title = ${body.title}, slug = ${body.slug}, excerpt = ${body.excerpt || null}, content = ${body.content}, image_base64 = ${body.image_base64 || null}, published = ${body.published}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
     return Response.json({ success: true, message: "Blog post updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update blog post" } as ApiResponse, { status: 500 });
@@ -501,7 +513,7 @@ export async function updateBlogPost(req: Request): Promise<Response> {
 export async function deleteBlogPost(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
-    db.prepare("DELETE FROM blog_posts WHERE id = ?").run(id);
+    await sql`DELETE FROM blog_posts WHERE id = ${id}`;
     return Response.json({ success: true, message: "Blog post deleted" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to delete blog post" } as ApiResponse, { status: 500 });
@@ -511,7 +523,7 @@ export async function deleteBlogPost(req: Request): Promise<Response> {
 // Get all appointments (admin only)
 export async function getAppointments(req: Request): Promise<Response> {
   try {
-    const appointments = db.prepare("SELECT * FROM appointments ORDER BY created_at DESC").all();
+    const appointments = await sql`SELECT * FROM appointments ORDER BY created_at DESC`;
     return Response.json({ success: true, data: appointments } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to fetch appointments" } as ApiResponse, { status: 500 });
@@ -522,7 +534,7 @@ export async function updateAppointmentStatus(req: Request): Promise<Response> {
   try {
     const id = req.params?.id;
     const body = await req.json() as { status: string };
-    db.prepare("UPDATE appointments SET status = ? WHERE id = ?").run(body.status, id);
+    await sql`UPDATE appointments SET status = ${body.status} WHERE id = ${id}`;
     return Response.json({ success: true, message: "Appointment status updated" } as ApiResponse);
   } catch (error) {
     return Response.json({ success: false, error: "Failed to update appointment" } as ApiResponse, { status: 500 });
