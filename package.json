@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "setup": "bun src/database/setup.ts",
     "dev": "bun --hot src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
     "build": "bun run build.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "bun-plugin-tailwind": "^0.0.15",
     "react": "^19",
     "react-dom": "^19",
