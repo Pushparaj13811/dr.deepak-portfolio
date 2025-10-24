@@ -1,26 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardHeader } from "../shared/Card";
 import { Button } from "../shared/Button";
-import { Modal } from "../shared/Modal";
-import { Input } from "../shared/Input";
-import type {
-  Profile,
-  Service,
-  Education,
-  Experience,
-  Skill,
-  Award,
-  PortfolioItem,
-  ContactInfo,
-  SocialLink,
-  Appointment,
-} from "../../types";
+import { ProfilePage } from "./pages/ProfilePage";
+import { ServicesPage } from "./pages/ServicesPage";
+import { EducationPage } from "./pages/EducationPage";
+import { ExperiencePage } from "./pages/ExperiencePage";
+import { SkillsPage } from "./pages/SkillsPage";
+import { AwardsPage } from "./pages/AwardsPage";
+import { PortfolioPage } from "./pages/PortfolioPage";
+import { AppointmentsPage } from "./pages/AppointmentsPage";
+import { ContactPage } from "./pages/ContactPage";
+import { SocialLinksPage } from "./pages/SocialLinksPage";
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
-type Section =
+type Page =
+  | "dashboard"
   | "profile"
   | "services"
   | "education"
@@ -33,29 +30,12 @@ type Section =
   | "social";
 
 export function Dashboard({ onLogout }: DashboardProps) {
-  const [activeSection, setActiveSection] = useState<Section | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [activePage, setActivePage] = useState<Page>("dashboard");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  // Data states
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [education, setEducation] = useState<Education[]>([]);
-  const [experience, setExperience] = useState<Experience[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [awards, setAwards] = useState<Award[]>([]);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [contact, setContact] = useState<ContactInfo | null>(null);
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
-
-  // Form states
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [isAdding, setIsAdding] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/admin/logout", { method: "POST" });
+      await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
       onLogout();
     } catch (error) {
       console.error("Logout failed:", error);
@@ -65,865 +45,475 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
   const showMessage = (type: "success" | "error", text: string) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage(null), 3000);
+    setTimeout(() => setMessage(null), 5000);
   };
 
-  const openSection = async (section: Section) => {
-    setActiveSection(section);
-    setIsAdding(false);
-    setEditingItem(null);
-    await loadSectionData(section);
+  const goToDashboard = () => {
+    setActivePage("dashboard");
   };
 
-  const closeSection = () => {
-    setActiveSection(null);
-    setEditingItem(null);
-    setIsAdding(false);
+  // Toast Notification - Always render at top level
+  const renderToast = () => {
+    if (!message) return null;
+
+    return (
+      <div
+        className={`fixed top-24 right-4 z-[9999] px-6 py-4 rounded-lg shadow-xl animate-slide-in-right flex items-center gap-3 min-w-[300px] ${
+          message.type === "success"
+            ? "bg-green-500 text-white"
+            : "bg-red-500 text-white"
+        }`}
+      >
+        <div className="flex-shrink-0">
+          {message.type === "success" ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="font-medium">{message.text}</p>
+        </div>
+        <button
+          onClick={() => setMessage(null)}
+          className="flex-shrink-0 ml-2 hover:opacity-80 transition"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    );
   };
 
-  const loadSectionData = async (section: Section) => {
-    setLoading(true);
-    try {
-      switch (section) {
-        case "profile":
-          const profileRes = await fetch("/api/profile");
-          const profileData = await profileRes.json();
-          setProfile(profileData.data);
-          break;
-        case "services":
-          const servicesRes = await fetch("/api/services");
-          const servicesData = await servicesRes.json();
-          setServices(servicesData.data || []);
-          break;
-        case "education":
-          const eduRes = await fetch("/api/education");
-          const eduData = await eduRes.json();
-          setEducation(eduData.data || []);
-          break;
-        case "experience":
-          const expRes = await fetch("/api/experience");
-          const expData = await expRes.json();
-          setExperience(expData.data || []);
-          break;
-        case "skills":
-          const skillsRes = await fetch("/api/skills");
-          const skillsData = await skillsRes.json();
-          setSkills(skillsData.data || []);
-          break;
-        case "awards":
-          const awardsRes = await fetch("/api/awards");
-          const awardsData = await awardsRes.json();
-          setAwards(awardsData.data || []);
-          break;
-        case "portfolio":
-          const portfolioRes = await fetch("/api/portfolio");
-          const portfolioData = await portfolioRes.json();
-          setPortfolio(portfolioData.data || []);
-          break;
-        case "appointments":
-          const apptRes = await fetch("/api/admin/appointments");
-          const apptData = await apptRes.json();
-          setAppointments(apptData.data || []);
-          break;
-        case "contact":
-          const contactRes = await fetch("/api/contact");
-          const contactData = await contactRes.json();
-          setContact(contactData.data);
-          break;
-        case "social":
-          const socialRes = await fetch("/api/social-links");
-          const socialData = await socialRes.json();
-          setSocialLinks(socialData.data || []);
-          break;
-      }
-    } catch (error) {
-      showMessage("error", "Failed to load data");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Render active page
+  if (activePage === "profile") {
+    return (
+      <>
+        {renderToast()}
+        <ProfilePage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-  const handleSave = async (data: any) => {
-    setLoading(true);
-    try {
-      let url = "";
-      let method = "POST";
+  if (activePage === "services") {
+    return (
+      <>
+        {renderToast()}
+        <ServicesPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-      if (activeSection === "profile") {
-        url = "/api/admin/profile";
-        method = "PUT";
-      } else if (editingItem) {
-        method = "PUT";
-        url = `/api/admin/${activeSection}/${editingItem.id}`;
-      } else {
-        url = `/api/admin/${activeSection}`;
-      }
+  if (activePage === "education") {
+    return (
+      <>
+        {renderToast()}
+        <EducationPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  if (activePage === "experience") {
+    return (
+      <>
+        {renderToast()}
+        <ExperiencePage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-      const result = await res.json();
+  if (activePage === "skills") {
+    return (
+      <>
+        {renderToast()}
+        <SkillsPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-      if (result.success) {
-        showMessage("success", result.message || "Saved successfully");
-        await loadSectionData(activeSection!);
-        setEditingItem(null);
-        setIsAdding(false);
-      } else {
-        showMessage("error", result.error || "Failed to save");
-      }
-    } catch (error) {
-      showMessage("error", "Failed to save");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (activePage === "awards") {
+    return (
+      <>
+        {renderToast()}
+        <AwardsPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
+  if (activePage === "portfolio") {
+    return (
+      <>
+        {renderToast()}
+        <PortfolioPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/admin/${activeSection}/${id}`, {
-        method: "DELETE",
-      });
+  if (activePage === "appointments") {
+    return (
+      <>
+        {renderToast()}
+        <AppointmentsPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-      const result = await res.json();
+  if (activePage === "contact") {
+    return (
+      <>
+        {renderToast()}
+        <ContactPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
-      if (result.success) {
-        showMessage("success", "Deleted successfully");
-        await loadSectionData(activeSection!);
-      } else {
-        showMessage("error", "Failed to delete");
-      }
-    } catch (error) {
-      showMessage("error", "Failed to delete");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (activePage === "social") {
+    return (
+      <>
+        {renderToast()}
+        <SocialLinksPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
 
+  // Dashboard home
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <div className="flex gap-4 items-center">
-            <a
-              href="/"
-              className="text-blue-600 hover:text-blue-800 font-medium"
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = "/";
-              }}
-            >
-              View Public Site
-            </a>
-            <Button variant="secondary" onClick={handleLogout}>
-              Logout
-            </Button>
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+              <p className="mt-1 text-blue-100">Manage your portfolio content with ease</p>
+            </div>
+            <div className="flex gap-3 items-center">
+              <a
+                href="/"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition backdrop-blur-sm border border-white/20"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = "/";
+                }}
+              >
+                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                View Site
+              </a>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition shadow-sm"
+              >
+                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Message Toast */}
+      {/* Toast Notification */}
       {message && (
         <div
-          className={`fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+          className={`fixed top-24 right-4 z-[9999] px-6 py-4 rounded-lg shadow-xl animate-slide-in-right flex items-center gap-3 min-w-[300px] ${
             message.type === "success"
               ? "bg-green-500 text-white"
               : "bg-red-500 text-white"
           }`}
         >
-          {message.text}
+          <div className="flex-shrink-0">
+            {message.type === "success" ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </div>
+          <div className="flex-1">
+            <p className="font-medium">{message.text}</p>
+          </div>
+          <button
+            onClick={() => setMessage(null)}
+            className="flex-shrink-0 ml-2 hover:opacity-80 transition"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          <Card>
-            <CardHeader title="Profile" subtitle="Edit doctor profile and hero section" />
-            <Button className="w-full" onClick={() => openSection("profile")}>
-              Manage Profile
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Services" subtitle="Add, edit, or remove services" />
-            <Button className="w-full" onClick={() => openSection("services")}>
-              Manage Services
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Education" subtitle="Update education timeline" />
-            <Button className="w-full" onClick={() => openSection("education")}>
-              Manage Education
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Experience" subtitle="Update work experience" />
-            <Button className="w-full" onClick={() => openSection("experience")}>
-              Manage Experience
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Skills" subtitle="Add or update skills" />
-            <Button className="w-full" onClick={() => openSection("skills")}>
-              Manage Skills
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Awards" subtitle="Manage awards and achievements" />
-            <Button className="w-full" onClick={() => openSection("awards")}>
-              Manage Awards
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Portfolio" subtitle="Upload and manage portfolio images" />
-            <Button className="w-full" onClick={() => openSection("portfolio")}>
-              Manage Portfolio
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Appointments" subtitle="View appointment requests" />
-            <Button className="w-full" onClick={() => openSection("appointments")}>
-              View Appointments
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Contact Info" subtitle="Update contact information" />
-            <Button className="w-full" onClick={() => openSection("contact")}>
-              Edit Contact Info
-            </Button>
-          </Card>
-
-          <Card>
-            <CardHeader title="Social Links" subtitle="Manage social media links" />
-            <Button className="w-full" onClick={() => openSection("social")}>
-              Manage Social Links
-            </Button>
-          </Card>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quick Actions</h2>
+          <p className="text-gray-600">Select a section to manage</p>
         </div>
 
-        {/* Section Modals */}
-        {activeSection === "profile" && profile && (
-          <ProfileEditor
-            profile={profile}
-            onSave={handleSave}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "services" && (
-          <ServicesManager
-            services={services}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "education" && (
-          <EducationManager
-            education={education}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "experience" && (
-          <ExperienceManager
-            experience={experience}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "skills" && (
-          <SkillsManager
-            skills={skills}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "awards" && (
-          <AwardsManager
-            awards={awards}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "portfolio" && (
-          <PortfolioManager
-            portfolio={portfolio}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "appointments" && (
-          <AppointmentsViewer
-            appointments={appointments}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "contact" && contact && (
-          <ContactEditor
-            contact={contact}
-            onSave={handleSave}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-
-        {activeSection === "social" && (
-          <SocialLinksManager
-            socialLinks={socialLinks}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onClose={closeSection}
-            loading={loading}
-          />
-        )}
-      </main>
-    </div>
-  );
-}
-
-// Profile Editor Component
-function ProfileEditor({
-  profile,
-  onSave,
-  onClose,
-  loading,
-}: {
-  profile: Profile;
-  onSave: (data: any) => void;
-  onClose: () => void;
-  loading: boolean;
-}) {
-  const [formData, setFormData] = useState(profile);
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Edit Profile">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSave(formData);
-        }}
-        className="space-y-4"
-      >
-        <Input
-          label="Full Name"
-          value={formData.full_name}
-          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-          required
-        />
-        <Input
-          label="Title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          required
-        />
-        <Input
-          label="Tagline"
-          value={formData.tagline}
-          onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-          required
-        />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            About Text
-          </label>
-          <textarea
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={4}
-            value={formData.about_text || ""}
-            onChange={(e) => setFormData({ ...formData, about_text: e.target.value })}
-          />
-        </div>
-        <Input
-          label="Photo URL"
-          type="url"
-          value={formData.photo_url || ""}
-          onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-        />
-        <Input
-          label="Years of Experience"
-          type="number"
-          value={formData.years_experience}
-          onChange={(e) =>
-            setFormData({ ...formData, years_experience: parseInt(e.target.value) })
-          }
-        />
-        <Input
-          label="Surgeries Count"
-          type="number"
-          value={formData.surgeries_count}
-          onChange={(e) =>
-            setFormData({ ...formData, surgeries_count: parseInt(e.target.value) })
-          }
-        />
-        <div className="flex gap-2 justify-end pt-4">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
-// Services Manager Component
-function ServicesManager({
-  services,
-  onSave,
-  onDelete,
-  onClose,
-  loading,
-}: {
-  services: Service[];
-  onSave: (data: any) => void;
-  onDelete: (id: number) => void;
-  onClose: () => void;
-  loading: boolean;
-}) {
-  const [editing, setEditing] = useState<Service | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [formData, setFormData] = useState({ title: "", description: "", icon: "" });
-
-  const startEdit = (service: Service) => {
-    setEditing(service);
-    setFormData({
-      title: service.title,
-      description: service.description || "",
-      icon: service.icon || "",
-    });
-    setAdding(false);
-  };
-
-  const startAdd = () => {
-    setAdding(true);
-    setEditing(null);
-    setFormData({ title: "", description: "", icon: "" });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-    setEditing(null);
-    setAdding(false);
-    setFormData({ title: "", description: "", icon: "" });
-  };
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Manage Services">
-      <div className="space-y-4">
-        {!editing && !adding && (
-          <>
-            <Button onClick={startAdd} className="w-full">
-              Add New Service
-            </Button>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {services.map((service) => (
-                <div
-                  key={service.id}
-                  className="p-4 border rounded-lg flex justify-between items-start"
-                >
-                  <div>
-                    <h3 className="font-semibold">{service.title}</h3>
-                    <p className="text-sm text-gray-600">{service.description}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => startEdit(service)}>
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => onDelete(service.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Profile Card */}
+          <div
+            onClick={() => setActivePage("profile")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {(editing || adding) && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
-            <Input
-              label="Icon"
-              value={formData.icon}
-              onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setEditing(null);
-                  setAdding(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : adding ? "Add Service" : "Update Service"}
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
-    </Modal>
-  );
-}
-
-// Education Manager (similar structure)
-function EducationManager({
-  education,
-  onSave,
-  onDelete,
-  onClose,
-  loading,
-}: {
-  education: Education[];
-  onSave: (data: any) => void;
-  onDelete: (id: number) => void;
-  onClose: () => void;
-  loading: boolean;
-}) {
-  const [editing, setEditing] = useState<Education | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [formData, setFormData] = useState({
-    degree: "",
-    institution: "",
-    year: "",
-    description: "",
-  });
-
-  const startEdit = (edu: Education) => {
-    setEditing(edu);
-    setFormData({
-      degree: edu.degree,
-      institution: edu.institution,
-      year: edu.year || "",
-      description: edu.description || "",
-    });
-    setAdding(false);
-  };
-
-  const startAdd = () => {
-    setAdding(true);
-    setEditing(null);
-    setFormData({ degree: "", institution: "", year: "", description: "" });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-    setEditing(null);
-    setAdding(false);
-  };
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Manage Education">
-      <div className="space-y-4">
-        {!editing && !adding && (
-          <>
-            <Button onClick={startAdd} className="w-full">
-              Add Education
-            </Button>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {education.map((edu) => (
-                <div
-                  key={edu.id}
-                  className="p-4 border rounded-lg flex justify-between items-start"
-                >
-                  <div>
-                    <h3 className="font-semibold">{edu.degree}</h3>
-                    <p className="text-sm text-gray-600">{edu.institution}</p>
-                    <p className="text-sm text-gray-500">{edu.year}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => startEdit(edu)}>
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => onDelete(edu.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {(editing || adding) && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Degree"
-              value={formData.degree}
-              onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
-              required
-            />
-            <Input
-              label="Institution"
-              value={formData.institution}
-              onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-              required
-            />
-            <Input
-              label="Year"
-              value={formData.year}
-              onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-            />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setEditing(null);
-                  setAdding(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save"}
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
-    </Modal>
-  );
-}
-
-// Similar components for Experience, Skills, Awards, Portfolio, etc.
-// (I'll create simplified versions for brevity)
-
-function ExperienceManager(props: any) {
-  return (
-    <Modal isOpen={true} onClose={props.onClose} title="Manage Experience">
-      <div className="p-4">
-        <p className="text-gray-600 mb-4">Experience management interface</p>
-        <p className="text-sm text-gray-500">
-          Similar to Education manager - Add/Edit/Delete experience entries
-        </p>
-      </div>
-    </Modal>
-  );
-}
-
-function SkillsManager(props: any) {
-  return (
-    <Modal isOpen={true} onClose={props.onClose} title="Manage Skills">
-      <div className="p-4">
-        <p className="text-gray-600 mb-4">Skills management interface</p>
-        <p className="text-sm text-gray-500">
-          Add skills with proficiency levels (0-100)
-        </p>
-      </div>
-    </Modal>
-  );
-}
-
-function AwardsManager(props: any) {
-  return (
-    <Modal isOpen={true} onClose={props.onClose} title="Manage Awards">
-      <div className="p-4">
-        <p className="text-gray-600 mb-4">Awards management interface</p>
-      </div>
-    </Modal>
-  );
-}
-
-function PortfolioManager(props: any) {
-  return (
-    <Modal isOpen={true} onClose={props.onClose} title="Manage Portfolio">
-      <div className="p-4">
-        <p className="text-gray-600 mb-4">Portfolio management interface</p>
-        <p className="text-sm text-gray-500">
-          Add portfolio items with image URLs and categories
-        </p>
-      </div>
-    </Modal>
-  );
-}
-
-function AppointmentsViewer({
-  appointments,
-  onClose,
-  loading,
-}: {
-  appointments: Appointment[];
-  onClose: () => void;
-  loading: boolean;
-}) {
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Appointment Requests">
-      <div className="space-y-2 max-h-96 overflow-y-auto">
-        {appointments.map((appt) => (
-          <div key={appt.id} className="p-4 border rounded-lg">
-            <h3 className="font-semibold">{appt.full_name}</h3>
-            <p className="text-sm text-gray-600">{appt.email}</p>
-            <p className="text-sm text-gray-600">{appt.phone}</p>
-            <p className="text-sm text-gray-700 mt-2">{appt.message}</p>
-            <div className="mt-2">
-              <span
-                className={`inline-block px-2 py-1 text-xs rounded ${
-                  appt.status === "pending"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-green-100 text-green-800"
-                }`}
-              >
-                {appt.status}
-              </span>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Profile</h3>
+              <p className="text-sm text-gray-500">Edit doctor profile and hero section</p>
             </div>
           </div>
-        ))}
-      </div>
-    </Modal>
-  );
-}
 
-function ContactEditor({
-  contact,
-  onSave,
-  onClose,
-  loading,
-}: {
-  contact: ContactInfo;
-  onSave: (data: any) => void;
-  onClose: () => void;
-  loading: boolean;
-}) {
-  const [formData, setFormData] = useState(contact);
+          {/* Services Card */}
+          <div
+            onClick={() => setActivePage("services")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-green-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Services</h3>
+              <p className="text-sm text-gray-500">Add, edit, or remove services</p>
+            </div>
+          </div>
 
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Edit Contact Info">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSave(formData);
-        }}
-        className="space-y-4"
-      >
-        <Input
-          label="Email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          required
-        />
-        <Input
-          label="Phone"
-          value={formData.phone || ""}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-        />
-        <Input
-          label="Address"
-          value={formData.address || ""}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-        />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Working Hours
-          </label>
-          <textarea
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={3}
-            value={formData.working_hours || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, working_hours: e.target.value })
-            }
-          />
+          {/* Education Card */}
+          <div
+            onClick={() => setActivePage("education")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-purple-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Education</h3>
+              <p className="text-sm text-gray-500">Update education timeline</p>
+            </div>
+          </div>
+
+          {/* Experience Card */}
+          <div
+            onClick={() => setActivePage("experience")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-orange-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Experience</h3>
+              <p className="text-sm text-gray-500">Update work experience</p>
+            </div>
+          </div>
+
+          {/* Skills Card */}
+          <div
+            onClick={() => setActivePage("skills")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-cyan-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-cyan-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Skills</h3>
+              <p className="text-sm text-gray-500">Add or update skills</p>
+            </div>
+          </div>
+
+          {/* Awards Card */}
+          <div
+            onClick={() => setActivePage("awards")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-yellow-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-yellow-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Awards</h3>
+              <p className="text-sm text-gray-500">Manage awards and achievements</p>
+            </div>
+          </div>
+
+          {/* Portfolio Card */}
+          <div
+            onClick={() => setActivePage("portfolio")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-pink-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-pink-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Portfolio</h3>
+              <p className="text-sm text-gray-500">Upload and manage portfolio images</p>
+            </div>
+          </div>
+
+          {/* Appointments Card */}
+          <div
+            onClick={() => setActivePage("appointments")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Appointments</h3>
+              <p className="text-sm text-gray-500">View appointment requests</p>
+            </div>
+          </div>
+
+          {/* Contact Card */}
+          <div
+            onClick={() => setActivePage("contact")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-red-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Contact Info</h3>
+              <p className="text-sm text-gray-500">Update contact information</p>
+            </div>
+          </div>
+
+          {/* Social Links Card */}
+          <div
+            onClick={() => setActivePage("social")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-teal-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Social Links</h3>
+              <p className="text-sm text-gray-500">Manage social media links</p>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2 justify-end">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : "Save"}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
-function SocialLinksManager(props: any) {
-  return (
-    <Modal isOpen={true} onClose={props.onClose} title="Manage Social Links">
-      <div className="p-4">
-        <p className="text-gray-600 mb-4">Social links management interface</p>
-      </div>
-    </Modal>
+      </main>
+    </div>
   );
 }
