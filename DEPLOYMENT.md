@@ -8,6 +8,7 @@ This guide explains how to deploy the Dr. Deepak Mehta Portfolio application to 
 - Compute Engine Instance: `instance-20250804-164027`
 - Zone: `us-central1-c`
 - GitHub repository with Actions enabled
+- Domain: `deepak.hpm.com.np`
 
 ## Setup Instructions
 
@@ -98,7 +99,8 @@ cat > .env << 'EOF'
 NODE_ENV=production
 DATABASE_URL=your_database_url_here
 SESSION_SECRET=your_session_secret_here
-PORT=3000
+PORT=3002
+DOMAIN=deepak.hpm.com.np
 EOF
 
 # Install dependencies
@@ -116,10 +118,10 @@ pm2 save
 ### 5. Configure Firewall Rules
 
 ```bash
-# Allow HTTP traffic
+# Allow HTTP traffic (port 80 for nginx)
 gcloud compute firewall-rules create allow-http \
   --project=mindspace-468015 \
-  --allow=tcp:80,tcp:3000 \
+  --allow=tcp:80 \
   --source-ranges=0.0.0.0/0 \
   --target-tags=http-server
 
@@ -136,7 +138,11 @@ gcloud compute instances add-tags instance-20250804-164027 \
   --tags=http-server,https-server
 ```
 
-### 6. Optional: Set up Nginx as Reverse Proxy
+### 6. Set up Nginx as Reverse Proxy (Recommended)
+
+The application is configured to run on port 3002 behind an Nginx reverse proxy at `deepak.hpm.com.np`.
+
+**Quick Setup (Automated):**
 
 ```bash
 # SSH into instance
@@ -144,35 +150,19 @@ gcloud compute ssh instance-20250804-164027 \
   --zone us-central1-c \
   --project mindspace-468015
 
-# Install Nginx
-sudo apt update
-sudo apt install -y nginx
+# Navigate to project directory
+cd ~/Deepak
 
-# Configure Nginx
-sudo tee /etc/nginx/sites-available/deepak << 'EOF'
-server {
-    listen 80;
-    server_name YOUR_DOMAIN_OR_IP;
+# Run nginx setup script
+chmod +x scripts/setup-nginx.sh
+sudo bash scripts/setup-nginx.sh
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-EOF
-
-# Enable site
-sudo ln -s /etc/nginx/sites-available/deepak /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
+# Optional: Setup SSL with Let's Encrypt
+chmod +x scripts/setup-ssl.sh
+sudo bash scripts/setup-ssl.sh
 ```
+
+For detailed nginx configuration and troubleshooting, see **[NGINX_SETUP.md](NGINX_SETUP.md)**.
 
 ## Deployment Process
 
@@ -342,8 +332,9 @@ gcloud compute instances describe instance-20250804-164027 \
 ```
 
 Your application will be accessible at:
-- `http://INSTANCE_IP:3000` (direct)
-- `http://INSTANCE_IP` (if using Nginx on port 80)
+- `http://deepak.hpm.com.np` (via Nginx)
+- `https://deepak.hpm.com.np` (via Nginx with SSL)
+- `http://INSTANCE_IP:3002` (direct, for testing)
 
 ## Environment Variables
 
@@ -351,7 +342,7 @@ Create a `.env` file on the server with:
 
 ```bash
 NODE_ENV=production
-PORT=3000
+PORT=3002
 
 # Database
 DATABASE_URL=your_neon_postgres_url
@@ -359,17 +350,18 @@ DATABASE_URL=your_neon_postgres_url
 # Session
 SESSION_SECRET=your_long_random_secret_here
 
-# Optional: if using domain
-DOMAIN=yourdomain.com
+# Domain
+DOMAIN=deepak.hpm.com.np
 ```
 
 ## Next Steps
 
-1. Set up a custom domain
-2. Configure SSL certificate (Let's Encrypt)
+1. ✅ Set up custom domain (deepak.hpm.com.np configured)
+2. Configure SSL certificate - Run `sudo bash scripts/setup-ssl.sh`
 3. Set up monitoring (Google Cloud Monitoring)
 4. Configure automatic backups
 5. Set up staging environment
+6. Configure DNS to point to server IP
 
 ---
 

@@ -92,8 +92,8 @@ jobs:
           echo "Waiting for application to start..."
           sleep 5
 
-          # Try to curl the application (adjust port as needed)
-          if curl -f http://$INSTANCE_IP:3000 || curl -f http://$INSTANCE_IP; then
+          # Try to curl the application (port 3002 or via nginx on port 80)
+          if curl -f http://$INSTANCE_IP:3002 || curl -f http://$INSTANCE_IP || curl -f http://deepak.hpm.com.np; then
             echo "✅ Application is running!"
           else
             echo "⚠️ Application might not be accessible yet. Check server logs."
