@@ -37,12 +37,11 @@ if [ -z "$EMAIL" ]; then
 fi
 
 echo ""
-echo "Obtaining certificate for deepak.hpm.com.np and www.deepak.hpm.com.np..."
+echo "Obtaining certificate for deepak.hpm.com.np..."
 echo ""
 
 certbot --nginx \
     -d deepak.hpm.com.np \
-    -d www.deepak.hpm.com.np \
     --non-interactive \
     --agree-tos \
     --email "$EMAIL" \
