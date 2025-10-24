@@ -1,4 +1,5 @@
 import type { Profile } from "../../types";
+const deepakImage = "/src/assets/deepak.png";
 
 interface DoctorProfileProps {
   profile: Profile | null;
@@ -12,7 +13,7 @@ export function DoctorProfile({ profile }: DoctorProfileProps) {
           {/* Doctor Image - LEFT SIDE */}
           <div className="relative">
             <img
-              src={profile?.photo_url || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=600&fit=crop"}
+              src={profile?.photo_base64 || deepakImage}
               alt={profile?.full_name || "Doctor"}
               className="w-full h-auto object-cover rounded-lg"
             />
@@ -20,7 +21,7 @@ export function DoctorProfile({ profile }: DoctorProfileProps) {
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:bg-white transition">
                 <svg className="w-6 h-6 text-[#0ea5e9] ml-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
+                  <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
             </div>
@@ -29,21 +30,20 @@ export function DoctorProfile({ profile }: DoctorProfileProps) {
           {/* Doctor Bio - RIGHT SIDE */}
           <div className="space-y-4">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              {profile?.full_name || "Dr. Skyler White"}
+              {profile?.full_name || "Dr. Deepak Mehta"}
             </h2>
             <h3 className="text-[#0ea5e9] font-semibold text-lg uppercase">
-              {profile?.title || "DENTIST & ORAL SURGEON"}
+              {profile?.title || "General Physician"}
             </h3>
-            <p className="text-sm text-gray-600 uppercase">
-              MBBS (DGN) FCPS (DGN)
-            </p>
+            {profile?.specialization && (
+              <p className="text-sm text-gray-600 uppercase">
+                {profile.specialization}
+              </p>
+            )}
 
             <div className="space-y-4 text-gray-700 leading-relaxed">
               <p>
                 {profile?.about_text || "Lorem ipsum dolor sit amet consectetur adipiscing elit. Dignissim ut tempor sagittis. Lorem ipsum dolor sit amet consectetur adipiscing elit."}
-              </p>
-              <p>
-                Habitant sit tristique lorem lectus sollicitudin magna gravida nec. Mauris lobortis gravida sapien dignissim erat. Habitant aliquet duis praesent vestibulum magna.
               </p>
             </div>
 

@@ -1,7 +1,8 @@
-import type { SocialLink } from "../../types";
+import type { SocialLink, Profile } from "../../types";
 
 interface FooterProps {
   socialLinks: SocialLink[];
+  profile: Profile | null;
 }
 
 const iconMap: Record<string, JSX.Element> = {
@@ -32,21 +33,34 @@ const iconMap: Record<string, JSX.Element> = {
   ),
 };
 
-export function Footer({ socialLinks }: FooterProps) {
+export function Footer({ socialLinks, profile }: FooterProps) {
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const currentYear = new Date().getFullYear();
+  const doctorName = profile?.full_name || "Doctor";
+  const initials = getInitials(doctorName);
+
   return (
     <footer className="bg-[#0c4a6e] text-white py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center">
-              <span className="text-[#0c4a6e] font-bold text-xl">M</span>
+              <span className="text-[#0c4a6e] font-bold text-xl">{initials}</span>
             </div>
-            <span className="text-xl font-semibold">MTN</span>
+            <span className="text-xl font-semibold">{doctorName}</span>
           </div>
 
           <div className="text-center">
             <p className="text-sm text-white/80">
-              Copyright © (Name) @wetech. All rights reserved
+              Copyright © {currentYear} {doctorName}. All rights reserved
             </p>
           </div>
 

@@ -109,15 +109,28 @@ export function Resume({ education, experience, skills, awards }: ResumeProps) {
             <>
               {awards.map((award) => (
                 <div key={award.id} className="border-l-4 border-[#0ea5e9] pl-6 py-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-gray-900">{award.title}</h4>
-                      {award.issuer && <p className="text-sm text-gray-500 mt-1">{award.issuer}</p>}
-                      {award.description && <p className="text-sm text-gray-600 mt-2 leading-relaxed">{award.description}</p>}
-                    </div>
-                    {award.year && (
-                      <span className="text-sm text-gray-500 flex-shrink-0">{award.year}</span>
+                  <div className="flex items-start gap-4">
+                    {award.image_base64 && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={award.image_base64}
+                          alt={award.title}
+                          className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
+                        />
+                      </div>
                     )}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-900">{award.title}</h4>
+                          {award.issuer && <p className="text-sm text-gray-500 mt-1">{award.issuer}</p>}
+                          {award.description && <p className="text-sm text-gray-600 mt-2 leading-relaxed">{award.description}</p>}
+                        </div>
+                        {award.year && (
+                          <span className="text-sm text-gray-500 flex-shrink-0">{award.year}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
