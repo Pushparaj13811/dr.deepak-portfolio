@@ -36,6 +36,7 @@ export function App() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [awards, setAwards] = useState<Award[]>([]);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
 
   // Check URL path for admin route
@@ -76,6 +77,7 @@ export function App() {
         skillsRes,
         awardsRes,
         portfolioRes,
+        contactRes,
         socialRes,
       ] = await Promise.all([
         fetch("/api/profile"),
@@ -85,6 +87,7 @@ export function App() {
         fetch("/api/skills"),
         fetch("/api/awards"),
         fetch("/api/portfolio"),
+        fetch("/api/contact"),
         fetch("/api/social-links"),
       ]);
 
@@ -96,6 +99,7 @@ export function App() {
         skillsData,
         awardsData,
         portfolioData,
+        contactData,
         socialData,
       ] = await Promise.all([
         profileRes.json(),
@@ -105,6 +109,7 @@ export function App() {
         skillsRes.json(),
         awardsRes.json(),
         portfolioRes.json(),
+        contactRes.json(),
         socialRes.json(),
       ]);
 
@@ -115,6 +120,7 @@ export function App() {
       setSkills(skillsData.data || []);
       setAwards(awardsData.data || []);
       setPortfolio(portfolioData.data || []);
+      setContactInfo(contactData.data);
       setSocialLinks(socialData.data || []);
     } catch (error) {
       console.error("Failed to load data:", error);
@@ -156,7 +162,7 @@ export function App() {
   return (
     <div className="min-h-screen bg-white">
       <Navigation profile={profile} />
-      <Hero profile={profile} />
+      <Hero profile={profile} socialLinks={socialLinks} />
       <Services services={services} />
       <DoctorProfile profile={profile} />
       <Portfolio items={portfolio} />
@@ -168,8 +174,8 @@ export function App() {
         awards={awards}
         profile={profile}
       />
-      <Appointment />
-      <Footer socialLinks={socialLinks} />
+      <Appointment contactInfo={contactInfo} />
+      <Footer socialLinks={socialLinks} profile={profile} />
     </div>
   );
 }
