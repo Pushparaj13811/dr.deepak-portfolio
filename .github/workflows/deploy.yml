@@ -60,11 +60,14 @@ jobs:
                 exit 1
             fi
 
+            # Fix Git ownership issue BEFORE any git operations
+            # Get the absolute path to handle symlinks and mounted disks
+            APP_DIR_REAL=$(realpath "$APP_DIR")
+            git config --global --add safe.directory "$APP_DIR"
+            git config --global --add safe.directory "$APP_DIR_REAL"
+
             # Navigate to application directory
             cd "$APP_DIR"
-
-            # Fix Git ownership issue (if directory was created with sudo)
-            git config --global --add safe.directory "$APP_DIR"
 
             # Pull latest changes
             echo "Pulling latest changes..."
