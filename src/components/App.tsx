@@ -155,7 +155,7 @@ export function App() {
   // Public website
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
+      <Navigation profile={profile} />
       <Hero profile={profile} />
       <Services services={services} />
       <DoctorProfile profile={profile} />

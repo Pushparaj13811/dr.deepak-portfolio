@@ -23,9 +23,10 @@ export function Hero({ profile }: HeroProps) {
     >
       <div className="absolute inset-0 bg-[#b8d4e8]/80"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 lg:gap-12 w-full h-full items-center md:items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 lg:gap-12 w-full h-full md:items-center">
           {/* Text Content - LEFT SIDE */}
-          <div className="space-y-4 md:space-y-6 order-2 md:order-1 py-6 md:py-0 md:pb-12 lg:pb-20">
+          <div className="order-2 md:order-1 py-6 md:py-0 flex items-center md:h-full">
+            <div className="space-y-4 md:space-y-6 w-full">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
               {profile?.tagline || "Dreams of life remains till the heart beats"}
             </h1>
@@ -50,15 +51,16 @@ export function Hero({ profile }: HeroProps) {
                 </svg>
               </a>
             </div>
+            </div>
           </div>
 
           {/* Doctor Image - RIGHT SIDE */}
-          <div className="relative order-1 md:order-2 h-[60vh] md:h-auto" style={{ lineHeight: 0 }}>
+          <div className="relative order-1 md:order-2 h-[60vh] md:h-full flex items-end" style={{ lineHeight: 0 }}>
             <img
               src={heroImage}
               alt={profile?.full_name || "Doctor"}
-              className="w-full h-full md:h-auto object-cover object-bottom rounded-lg"
-              style={{ display: 'block', margin: 0, padding: 0 }}
+              className="w-full h-auto max-h-none object-cover object-bottom rounded-lg md:rounded-none"
+              style={{ display: 'block', margin: 0, padding: 0, minHeight: '85%' }}
             />
           </div>
         </div>
