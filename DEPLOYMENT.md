@@ -10,7 +10,32 @@ This guide explains how to deploy the Dr. Deepak Mehta Portfolio application to 
 - GitHub repository with Actions enabled
 - Domain: `deepak.hpm.com.np`
 
-## Setup Instructions
+## Quick Start (First-Time Setup)
+
+If this is your first time deploying, use the automated setup script:
+
+```bash
+# From your local machine, run:
+bash scripts/first-time-setup.sh
+```
+
+This script will:
+- Install Bun, PM2, and Git on your GCP instance
+- Clone the repository
+- Create the environment file
+- Set up the database
+- Start the application with PM2
+- Set up Nginx (optional)
+
+After first-time setup, GitHub Actions will handle all future deployments automatically.
+
+**Skip to [Automatic Deployment](#automatic-deployment) after running first-time setup.**
+
+---
+
+## Manual Setup Instructions
+
+If you prefer manual setup or need to troubleshoot, follow these detailed steps:
 
 ### 1. Create a Google Cloud Service Account
 
@@ -224,23 +249,33 @@ curl http://localhost:3000
 
 **Common issues:**
 
-1. **SSH Connection Failed**
+1. **"Application directory does not exist" Error**
+   ```
+   ❌ Application directory does not exist: /home/***/Deepak
+   ```
+   **Solution:** This is a first-time deployment. Run the setup script:
+   ```bash
+   bash scripts/first-time-setup.sh
+   ```
+
+2. **SSH Connection Failed**
    - Verify SSH key is added to GCP instance
    - Check firewall rules allow SSH (port 22)
    - Ensure service account has proper permissions
+   - Run the GitHub secrets setup: `bash /tmp/setup_github_secrets.sh`
 
-2. **Git Pull Failed**
+3. **Git Pull Failed**
    - SSH into server and manually pull: `git pull origin main`
    - Check git configuration on server
 
-3. **Dependencies Installation Failed**
+4. **Dependencies Installation Failed**
    - Check Bun is installed: `bun --version`
    - Clear cache: `rm -rf node_modules && bun install`
 
-4. **Application Won't Start**
+5. **Application Won't Start**
    - Check environment variables in `.env`
    - Verify database connection
-   - Check port is not already in use: `sudo lsof -i :3000`
+   - Check port is not already in use: `sudo lsof -i :3002`
 
 ### Application Not Accessible
 
