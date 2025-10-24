@@ -1,4 +1,4 @@
-import { db } from "../../database/db";
+import sql from "../../database/db";
 import type { AdminUser, Session } from "../../types";
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24; // 24 hours
@@ -7,31 +7,33 @@ export function generateSessionId(): string {
   return crypto.randomUUID();
 }
 
-export function createSession(userId: number): string {
+export async function createSession(userId: number): Promise<string> {
   const sessionId = generateSessionId();
   const expiresAt = new Date(Date.now() + SESSION_DURATION).toISOString();
 
-  db.prepare(
-    "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)"
-  ).run(sessionId, userId, expiresAt);
+  await sql`
+    INSERT INTO sessions (id, user_id, expires_at)
+    VALUES (${sessionId}, ${userId}, ${expiresAt})
+  `;
 
   return sessionId;
 }
 
-export function getSession(sessionId: string): Session | null {
-  const session = db.prepare(
-    "SELECT * FROM sessions WHERE id = ? AND expires_at > datetime('now')"
-  ).get(sessionId) as Session | null;
+export async function getSession(sessionId: string): Promise<Session | null> {
+  const sessions = await sql`
+    SELECT * FROM sessions
+    WHERE id = ${sessionId} AND expires_at > NOW()
+  `;
 
-  return session;
+  return sessions.length > 0 ? (sessions[0] as Session) : null;
 }
 
-export function deleteSession(sessionId: string): void {
-  db.prepare("DELETE FROM sessions WHERE id = ?").run(sessionId);
+export async function deleteSession(sessionId: string): Promise<void> {
+  await sql`DELETE FROM sessions WHERE id = ${sessionId}`;
 }
 
-export function cleanupExpiredSessions(): void {
-  db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run();
+export async function cleanupExpiredSessions(): Promise<void> {
+  await sql`DELETE FROM sessions WHERE expires_at <= NOW()`;
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
@@ -42,15 +44,15 @@ export async function hashPassword(password: string): Promise<string> {
   return await Bun.password.hash(password);
 }
 
-export function getUserFromSession(sessionId: string): AdminUser | null {
-  const session = getSession(sessionId);
+export async function getUserFromSession(sessionId: string): Promise<AdminUser | null> {
+  const session = await getSession(sessionId);
   if (!session) return null;
 
-  const user = db.prepare(
-    "SELECT id, username, created_at FROM admin_users WHERE id = ?"
-  ).get(session.user_id) as AdminUser | null;
+  const users = await sql`
+    SELECT id, username, created_at FROM admin_users WHERE id = ${session.user_id}
+  `;
 
-  return user;
+  return users.length > 0 ? (users[0] as AdminUser) : null;
 }
 
 export function getSessionFromRequest(req: Request): string | null {
@@ -59,8 +61,8 @@ export function getSessionFromRequest(req: Request): string | null {
 
   const sessionCookie = cookies
     .split(";")
-    .map(c => c.trim())
-    .find(c => c.startsWith("session="));
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("session="));
 
   if (!sessionCookie) return null;
 

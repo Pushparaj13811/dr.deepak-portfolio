@@ -19,7 +19,7 @@ export function requireAuth(handler: (req: AuthenticatedRequest) => Response | P
       );
     }
 
-    const user = getUserFromSession(sessionId);
+    const user = await getUserFromSession(sessionId);
 
     if (!user) {
       return new Response(
@@ -44,7 +44,7 @@ export function optionalAuth(handler: (req: AuthenticatedRequest) => Response | 
     const sessionId = getSessionFromRequest(req);
 
     if (sessionId) {
-      const user = getUserFromSession(sessionId);
+      const user = await getUserFromSession(sessionId);
       if (user) {
         const authReq = req as AuthenticatedRequest;
         authReq.user = user;
