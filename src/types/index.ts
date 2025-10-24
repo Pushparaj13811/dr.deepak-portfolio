@@ -11,8 +11,10 @@ export interface Profile {
   full_name: string;
   title: string;
   tagline: string;
+  about_text_short: string | null;
   about_text: string | null;
-  photo_url: string | null;
+  specialization: string | null;
+  photo_base64: string | null;
   years_experience: number;
   surgeries_count: number;
   created_at: string;
@@ -68,6 +70,7 @@ export interface Award {
   issuer: string | null;
   year: string | null;
   description: string | null;
+  image_base64: string | null;
   display_order: number;
   created_at: string;
   updated_at: string;
@@ -77,7 +80,7 @@ export interface PortfolioItem {
   id: number;
   title: string;
   description: string | null;
-  image_url: string;
+  image_base64: string;
   category: string;
   display_order: number;
   created_at: string;
@@ -99,6 +102,8 @@ export interface ContactInfo {
   email: string;
   phone: string | null;
   address: string | null;
+  permanent_address: string | null;
+  description: string | null;
   working_hours: string | null;
   created_at: string;
   updated_at: string;
@@ -120,7 +125,7 @@ export interface BlogPost {
   slug: string;
   excerpt: string | null;
   content: string;
-  image_url: string | null;
+  image_base64: string | null;
   published: boolean;
   created_at: string;
   updated_at: string;
@@ -195,12 +200,13 @@ export interface AwardFormData {
   issuer?: string;
   year?: string;
   description?: string;
+  image_base64?: string;
 }
 
 export interface PortfolioFormData {
   title: string;
   description?: string;
-  image_url: string;
+  image_base64: string;
   category: string;
 }
 
@@ -208,8 +214,10 @@ export interface ProfileFormData {
   full_name: string;
   title: string;
   tagline: string;
+  about_text_short?: string;
   about_text?: string;
-  photo_url?: string;
+  specialization?: string;
+  photo_base64?: string;
   years_experience: number;
   surgeries_count: number;
 }
@@ -218,6 +226,8 @@ export interface ContactFormData {
   email: string;
   phone?: string;
   address?: string;
+  permanent_address?: string;
+  description?: string;
   working_hours?: string;
 }
 
@@ -232,6 +242,6 @@ export interface BlogPostFormData {
   slug: string;
   excerpt?: string;
   content: string;
-  image_url?: string;
+  image_base64?: string;
   published: boolean;
 }
