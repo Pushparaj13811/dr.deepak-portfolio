@@ -137,10 +137,6 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
 
   // Apply theme styles
   const theme = post.theme || {};
-  const themeClasses = {
-    light: "bg-white text-gray-900",
-    dark: "bg-gray-900 text-white",
-  };
 
   const fontSizeClasses = {
     small: "text-sm",
@@ -157,12 +153,6 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
   // Ensure we use a typed key when indexing fontFamilyStyles to avoid implicit any errors
   const fontFamilyKey = (theme.fontFamily as keyof typeof fontFamilyStyles) || "sans-serif";
 
-  const layoutClasses = {
-    standard: "max-w-4xl",
-    magazine: "max-w-6xl",
-    minimal: "max-w-2xl",
-  };
-
   return (
     <section className="bg-white min-h-screen">
       {/* Hero Section with Cover Image */}
@@ -173,7 +163,7 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
             alt={post.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
