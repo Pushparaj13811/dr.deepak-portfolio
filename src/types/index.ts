@@ -119,6 +119,14 @@ export interface SocialLink {
   updated_at: string;
 }
 
+export interface BlogImage {
+  id: string;
+  name: string;
+  base64: string;
+  alt?: string;
+  caption?: string;
+}
+
 export interface BlogPost {
   id: number;
   title: string;
@@ -127,8 +135,35 @@ export interface BlogPost {
   content: string;
   image_base64: string | null;
   published: boolean;
+  // Theme customization
+  theme: BlogTheme;
+  // SEO fields
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  // Categories/Tags
+  tags?: string[];
+  category?: string;
+  // Additional fields
+  author?: string;
+  reading_time?: number;
+  // Multiple inline images
+  inline_images?: BlogImage[];
   created_at: string;
   updated_at: string;
+}
+
+export interface BlogTheme {
+  mode: 'light' | 'dark';
+  primaryColor: string;
+  fontFamily: string;
+  fontSize: 'small' | 'medium' | 'large';
+  layout: 'standard' | 'magazine' | 'minimal';
+  showCoverImage: boolean;
+  showReadingTime: boolean;
+  showAuthor: boolean;
+  showDate: boolean;
+  enableComments: boolean;
 }
 
 export interface Session {
@@ -244,4 +279,17 @@ export interface BlogPostFormData {
   content: string;
   image_base64?: string;
   published: boolean;
+  // Theme customization
+  theme: BlogTheme;
+  // SEO fields
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  // Categories/Tags
+  tags?: string[];
+  category?: string;
+  // Additional fields
+  author?: string;
+  // Multiple inline images
+  inline_images?: BlogImage[];
 }

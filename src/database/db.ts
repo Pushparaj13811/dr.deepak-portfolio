@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { seedBlogs } from "./seed-blogs";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
@@ -238,6 +239,61 @@ export async function initDatabase() {
       // Column might not exist
     }
 
+    // Add new blog customization fields
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS theme JSONB DEFAULT '{"mode":"light","primaryColor":"#3b82f6","fontFamily":"sans-serif","fontSize":"medium","layout":"standard","showCoverImage":true,"showReadingTime":true,"showAuthor":true,"showDate":true,"enableComments":false}'::jsonb`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS meta_title VARCHAR(255)`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS meta_description TEXT`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS meta_keywords TEXT`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS tags TEXT[]`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS category VARCHAR(100)`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS author VARCHAR(255)`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS reading_time INTEGER`;
+    } catch (error) {
+      // Column might already exist
+    }
+
+    try {
+      await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS inline_images JSONB DEFAULT '[]'::jsonb`;
+    } catch (error) {
+      // Column might already exist
+    }
+
     // Add new columns to existing tables
     try {
       await sql`ALTER TABLE awards ADD COLUMN IF NOT EXISTS image_base64 TEXT`;
@@ -268,6 +324,18 @@ export async function initDatabase() {
     await sql`CREATE INDEX IF NOT EXISTS idx_social_order ON social_links(display_order)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)`;
+
+    // Seed blog posts if none exist
+    const blogCount = await sql`SELECT COUNT(*) as count FROM blog_posts`;
+    const count = typeof blogCount[0]?.count === 'string' ? 
+      parseInt(blogCount[0].count, 10) : 
+      Number(blogCount[0]?.count || 0);
+    
+    if (count === 0) {
+      console.log("📝 Seeding blog posts...");
+      await seedBlogs();
+      console.log("✅ Blog posts seeded");
+    }
 
     console.log("✅ Database initialized");
   } catch (error) {
