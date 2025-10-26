@@ -8,6 +8,7 @@ import { StatsSection } from "./public/StatsSection";
 import { Resume } from "./public/Resume";
 import { Appointment } from "./public/Appointment";
 import { Footer } from "./public/Footer";
+import { Blog } from "./public/Blog";
 import { Login } from "./admin/Login";
 import { Dashboard } from "./admin/Dashboard";
 import type {
@@ -27,6 +28,8 @@ type View = "public" | "admin-login" | "admin-dashboard";
 export function App() {
   const [view, setView] = useState<View>("public");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
+  const [currentRoute, setCurrentRoute] = useState<string>("/");
 
   // Data states
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -42,11 +45,21 @@ export function App() {
   // Check URL path for admin route
   useEffect(() => {
     const path = window.location.pathname;
+    setCurrentRoute(path);
+    
     if (path.startsWith("/admin")) {
       checkAuth();
     } else {
       setView("public");
       loadPublicData();
+      
+      // Handle blog routes
+      if (path.startsWith("/blog/") && path !== "/blog/") {
+        const slug = path.replace("/blog/", "");
+        setSelectedBlogSlug(slug);
+      } else {
+        setSelectedBlogSlug(null);
+      }
     }
   }, []);
 
@@ -138,6 +151,27 @@ export function App() {
     setView("admin-login");
     window.history.pushState({}, "", "/admin/login");
   };
+  
+  const handleBlogPostSelect = (slug: string | null) => {
+    setSelectedBlogSlug(slug);
+    if (slug) {
+      window.history.pushState({}, "", `/blog/${slug}`);
+    } else {
+      window.history.pushState({}, "", "/blog");
+    }
+  };
+
+  const handleNavigateHome = () => {
+    setSelectedBlogSlug(null);
+    setCurrentRoute("/");
+    window.history.pushState({}, "", "/");
+  };
+
+  const handleNavigateToBlog = () => {
+    setSelectedBlogSlug(null);
+    setCurrentRoute("/blog");
+    window.history.pushState({}, "", "/blog");
+  };
 
   if (isLoading) {
     return (
@@ -158,23 +192,51 @@ export function App() {
     return <Dashboard onLogout={handleLogout} />;
   }
 
+  // Check if we're on a blog-specific route
+  const isBlogRoute = currentRoute === "/blog" || currentRoute.startsWith("/blog/");
+
   // Public website
   return (
     <div className="min-h-screen bg-white">
-      <Navigation profile={profile} />
-      <Hero profile={profile} socialLinks={socialLinks} />
-      <Services services={services} />
-      <DoctorProfile profile={profile} />
-      <Portfolio items={portfolio} />
-      <StatsSection profile={profile} />
-      <Resume
-        education={education}
-        experience={experience}
-        skills={skills}
-        awards={awards}
-        profile={profile}
+      <Navigation 
+        profile={profile} 
+        isBlogRoute={isBlogRoute}
+        onNavigateHome={handleNavigateHome}
+        onNavigateToBlog={handleNavigateToBlog}
       />
-      <Appointment contactInfo={contactInfo} />
+      
+      {isBlogRoute ? (
+        // Blog-only view
+        <Blog 
+          selectedSlug={selectedBlogSlug}
+          onSelectPost={handleBlogPostSelect}
+        />
+      ) : (
+        // Home page with all sections
+        <>
+          <Hero profile={profile} socialLinks={socialLinks} />
+          <Services services={services} />
+          <DoctorProfile profile={profile} />
+          <Portfolio items={portfolio} />
+          <StatsSection profile={profile} />
+          <Resume
+            education={education}
+            experience={experience}
+            skills={skills}
+            awards={awards}
+            profile={profile}
+          />
+          <Blog 
+            selectedSlug={null}
+            onSelectPost={(slug) => {
+              // Navigate to dedicated blog route instead of showing inline
+              window.location.href = `/blog/${slug}`;
+            }}
+          />
+          <Appointment contactInfo={contactInfo} />
+        </>
+      )}
+      
       <Footer socialLinks={socialLinks} profile={profile} />
     </div>
   );
