@@ -11,6 +11,7 @@ import { PortfolioPage } from "./pages/PortfolioPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
 import { ContactPage } from "./pages/ContactPage";
 import { SocialLinksPage } from "./pages/SocialLinksPage";
+import { BlogPage } from "./pages/BlogPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 interface DashboardProps {
@@ -29,6 +30,7 @@ type Page =
   | "appointments"
   | "contact"
   | "social"
+  | "blog"
   | "settings";
 
 export function Dashboard({ onLogout }: DashboardProps) {
@@ -215,6 +217,19 @@ export function Dashboard({ onLogout }: DashboardProps) {
       <>
         {renderToast()}
         <SocialLinksPage
+          onBack={goToDashboard}
+          onSuccess={showMessage.bind(null, "success")}
+          onError={showMessage.bind(null, "error")}
+        />
+      </>
+    );
+  }
+
+  if (activePage === "blog") {
+    return (
+      <>
+        {renderToast()}
+        <BlogPage
           onBack={goToDashboard}
           onSuccess={showMessage.bind(null, "success")}
           onError={showMessage.bind(null, "error")}
@@ -525,6 +540,27 @@ export function Dashboard({ onLogout }: DashboardProps) {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Social Links</h3>
               <p className="text-sm text-gray-500">Manage social media links</p>
+            </div>
+          </div>
+
+          {/* Blog Card */}
+          <div
+            onClick={() => setActivePage("blog")}
+            className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-emerald-200 hover:-translate-y-1"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Blog</h3>
+              <p className="text-sm text-gray-500">Create and manage blog posts</p>
             </div>
           </div>
 
