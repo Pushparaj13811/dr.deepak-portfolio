@@ -1,4 +1,9 @@
-import sql from "../../database/db";
+import { sql } from "../../database/db";
+
+interface RequestWithParams extends Request {
+  params?: Record<string, string>;
+}
+
 import type {
   Profile,
   Service,
@@ -17,7 +22,7 @@ import type {
 // GET /api/profile
 export async function getProfile(req: Request): Promise<Response> {
   try {
-    const result = await sql<Profile[]>`SELECT * FROM profile WHERE id = 1`;
+    const result = await sql`SELECT * FROM profile WHERE id = 1`;
     const profile = result[0] || null;
 
     return Response.json({
@@ -35,7 +40,7 @@ export async function getProfile(req: Request): Promise<Response> {
 // GET /api/services
 export async function getServices(req: Request): Promise<Response> {
   try {
-    const services = await sql<Service[]>`
+    const services = await sql`
       SELECT * FROM services ORDER BY display_order ASC
     `;
 
@@ -54,7 +59,7 @@ export async function getServices(req: Request): Promise<Response> {
 // GET /api/education
 export async function getEducation(req: Request): Promise<Response> {
   try {
-    const education = await sql<Education[]>`
+    const education = await sql`
       SELECT * FROM education ORDER BY display_order ASC
     `;
 
@@ -73,7 +78,7 @@ export async function getEducation(req: Request): Promise<Response> {
 // GET /api/experience
 export async function getExperience(req: Request): Promise<Response> {
   try {
-    const experience = await sql<Experience[]>`
+    const experience = await sql`
       SELECT * FROM experience ORDER BY display_order ASC
     `;
 
@@ -92,7 +97,7 @@ export async function getExperience(req: Request): Promise<Response> {
 // GET /api/skills
 export async function getSkills(req: Request): Promise<Response> {
   try {
-    const skills = await sql<Skill[]>`
+    const skills = await sql`
       SELECT * FROM skills ORDER BY display_order ASC
     `;
 
@@ -111,7 +116,7 @@ export async function getSkills(req: Request): Promise<Response> {
 // GET /api/awards
 export async function getAwards(req: Request): Promise<Response> {
   try {
-    const awards = await sql<Award[]>`
+    const awards = await sql`
       SELECT * FROM awards ORDER BY display_order ASC
     `;
 
@@ -133,16 +138,16 @@ export async function getPortfolio(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const category = url.searchParams.get("category");
 
-    let portfolio: PortfolioItem[];
+    let portfolio: any[];
 
     if (category && category !== "All Work") {
-      portfolio = await sql<PortfolioItem[]>`
+      portfolio = await sql`
         SELECT * FROM portfolio_items
         WHERE category = ${category}
         ORDER BY display_order ASC
       `;
     } else {
-      portfolio = await sql<PortfolioItem[]>`
+      portfolio = await sql`
         SELECT * FROM portfolio_items ORDER BY display_order ASC
       `;
     }
@@ -162,7 +167,7 @@ export async function getPortfolio(req: Request): Promise<Response> {
 // GET /api/contact
 export async function getContact(req: Request): Promise<Response> {
   try {
-    const result = await sql<ContactInfo[]>`SELECT * FROM contact_info WHERE id = 1`;
+    const result = await sql`SELECT * FROM contact_info WHERE id = 1`;
     const contact = result[0] || null;
 
     return Response.json({
@@ -180,7 +185,7 @@ export async function getContact(req: Request): Promise<Response> {
 // GET /api/social-links
 export async function getSocialLinks(req: Request): Promise<Response> {
   try {
-    const links = await sql<SocialLink[]>`
+    const links = await sql`
       SELECT * FROM social_links ORDER BY display_order ASC
     `;
 
@@ -199,7 +204,7 @@ export async function getSocialLinks(req: Request): Promise<Response> {
 // GET /api/blog
 export async function getBlogPosts(req: Request): Promise<Response> {
   try {
-    const posts = await sql<BlogPost[]>`
+    const posts = await sql`
       SELECT * FROM blog_posts WHERE published = true ORDER BY created_at DESC
     `;
 
@@ -216,7 +221,7 @@ export async function getBlogPosts(req: Request): Promise<Response> {
 }
 
 // GET /api/blog/:slug
-export async function getBlogPost(req: Request): Promise<Response> {
+export async function getBlogPost(req: RequestWithParams): Promise<Response> {
   try {
     const slug = req.params?.slug;
     if (!slug) {
@@ -226,7 +231,7 @@ export async function getBlogPost(req: Request): Promise<Response> {
       } as ApiResponse, { status: 400 });
     }
 
-    const result = await sql<BlogPost[]>`
+    const result = await sql`
       SELECT * FROM blog_posts WHERE slug = ${slug} AND published = true
     `;
     const post = result[0] || null;
@@ -264,7 +269,7 @@ export async function createAppointment(req: Request): Promise<Response> {
     }
 
     // Insert appointment
-    const result = await sql<{ id: number }[]>`
+    const result = await sql`
       INSERT INTO appointments (full_name, email, phone, message, status)
       VALUES (${body.full_name}, ${body.email}, ${body.phone || null}, ${body.message || null}, 'pending')
       RETURNING id
@@ -273,7 +278,7 @@ export async function createAppointment(req: Request): Promise<Response> {
     return Response.json({
       success: true,
       message: "Appointment request submitted successfully",
-      data: { id: result[0].id },
+      data: { id: result[0]?.id },
     } as ApiResponse);
   } catch (error) {
     return Response.json({
