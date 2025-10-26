@@ -185,7 +185,7 @@ export function AppointmentsPage({ onBack, onSuccess, onError }: AppointmentsPag
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold text-gray-900">{appointment.patient_name}</h3>
+                          <h3 className="text-lg font-semibold text-gray-900">{appointment.full_name}</h3>
                           <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(appointment.status)}`}>
                             {appointment.status.toUpperCase()}
                           </span>
@@ -198,7 +198,7 @@ export function AppointmentsPage({ onBack, onSuccess, onError }: AppointmentsPag
                             <span className="font-medium">Phone:</span> {appointment.phone}
                           </p>
                           <p className="text-gray-600">
-                            <span className="font-medium">Preferred Date:</span> {appointment.preferred_date}
+                            <span className="font-medium">Created:</span> {new Date(appointment.created_at).toLocaleDateString()}
                           </p>
                           {appointment.message && (
                             <p className="text-gray-600">

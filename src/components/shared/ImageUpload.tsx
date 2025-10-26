@@ -6,9 +6,10 @@ interface ImageUploadProps {
   value?: string;
   onChange: (base64: string) => void;
   onRemove?: () => void;
+  className?: string;
 }
 
-export function ImageUpload({ label, value, onChange, onRemove }: ImageUploadProps) {
+export function ImageUpload({ label, value, onChange, onRemove, className }: ImageUploadProps) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +63,7 @@ export function ImageUpload({ label, value, onChange, onRemove }: ImageUploadPro
   };
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className || ''}`}>
       <label className="block text-sm font-medium text-gray-700">{label}</label>
 
       {value && (

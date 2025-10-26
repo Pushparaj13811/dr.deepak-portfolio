@@ -20,7 +20,7 @@ export async function seedDatabase() {
 
   // Check if admin user already exists
   const existingAdmins = await sql`SELECT COUNT(*) as count FROM admin_users`;
-  if (existingAdmins[0].count > 0) {
+  if (existingAdmins[0]?.count > 0) {
     console.log("⚠️  Admin user already exists. Skipping admin creation.");
   } else {
     console.log("📝 Create admin user:");
@@ -65,7 +65,7 @@ export async function seedDatabase() {
 
   // Seed services
   const servicesExist = await sql`SELECT COUNT(*) as count FROM services`;
-  if (servicesExist[0].count === 0) {
+  if (servicesExist[0]?.count === 0) {
     const services = [
       {
         title: "Our Medicine Dept",
@@ -98,7 +98,7 @@ export async function seedDatabase() {
 
   // Seed education
   const educationExists = await sql`SELECT COUNT(*) as count FROM education`;
-  if (educationExists[0].count === 0) {
+  if (educationExists[0]?.count === 0) {
     const education = [
       {
         degree: "MBBS (DGNB)",
@@ -141,7 +141,7 @@ export async function seedDatabase() {
 
   // Seed experience
   const experienceExists = await sql`SELECT COUNT(*) as count FROM experience`;
-  if (experienceExists[0].count === 0) {
+  if (experienceExists[0]?.count === 0) {
     const experience = [
       {
         position: "Senior Surgeon",
@@ -172,7 +172,7 @@ export async function seedDatabase() {
 
   // Seed skills
   const skillsExist = await sql`SELECT COUNT(*) as count FROM skills`;
-  if (skillsExist[0].count === 0) {
+  if (skillsExist[0]?.count === 0) {
     const skills = [
       { name: "Surgery", proficiency: 95, category: "Medical", order: 1 },
       { name: "Patient Care", proficiency: 98, category: "Medical", order: 2 },
@@ -191,7 +191,7 @@ export async function seedDatabase() {
 
   // Seed awards
   const awardsExist = await sql`SELECT COUNT(*) as count FROM awards`;
-  if (awardsExist[0].count === 0) {
+  if (awardsExist[0]?.count === 0) {
     const awards = [
       {
         title: "Excellence in Surgery Award",
@@ -243,7 +243,7 @@ Saturday: 9:00 AM - 1:00 PM'
 
   // Seed social links
   const socialExists = await sql`SELECT COUNT(*) as count FROM social_links`;
-  if (socialExists[0].count === 0) {
+  if (socialExists[0]?.count === 0) {
     const socialLinks = [
       { platform: "Facebook", url: "https://facebook.com", icon: "facebook", order: 1 },
       { platform: "Twitter", url: "https://twitter.com", icon: "twitter", order: 2 },

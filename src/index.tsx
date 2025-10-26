@@ -51,6 +51,8 @@ import {
   createBlogPost,
   updateBlogPost,
   deleteBlogPost,
+  getBlogPostsAdmin,
+  getBlogPostAdmin,
   getAppointments,
   updateAppointmentStatus,
 } from "./server/routes/admin";
@@ -176,8 +178,12 @@ const server = serve({
     },
 
     // Admin Blog routes
-    "/api/admin/blog": { POST: requireAuth(createBlogPost) },
+    "/api/admin/blog": { 
+      GET: requireAuth(getBlogPostsAdmin),
+      POST: requireAuth(createBlogPost) 
+    },
     "/api/admin/blog/:id": {
+      GET: requireAuth(getBlogPostAdmin),
       PUT: requireAuth(updateBlogPost),
       DELETE: requireAuth(deleteBlogPost),
     },
@@ -199,4 +205,4 @@ const server = serve({
 console.log(`✅ Database initialized`);
 console.log(`🚀 Server running at ${server.url}`);
 console.log(`📱 Public site: ${server.url}`);
-console.log(`🔐 Admin panel: ${server.url}/admin`);
+console.log(`🔐 Admin panel: ${server.url}admin`);

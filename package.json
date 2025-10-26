@@ -9,6 +9,7 @@
     "start": "NODE_ENV=production bun src/index.tsx",
     "build": "bun run build.ts",
     "db:migrate": "bun src/database/db.ts",
+    "migrate" : "bun /src/database/migrate.ts",
     "deploy": "git pull && bun install && bun run build && pm2 restart deepak-portfolio || pm2 start bun --name deepak-portfolio -- run start"
   },
   "dependencies": {
