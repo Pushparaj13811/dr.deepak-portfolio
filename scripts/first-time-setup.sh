@@ -141,7 +141,7 @@ NODE_ENV=production
 PORT=3002
 DATABASE_URL=$DATABASE_URL
 SESSION_SECRET=$SESSION_SECRET
-DOMAIN=deepak.hpm.com.np
+DOMAIN=drdeepakmehta.com.np
 ENVEOF
 
 # Replace placeholders with actual values
@@ -217,10 +217,10 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "Access your application:"
     echo "  Direct: http://$INSTANCE_IP:3002"
-    echo "  Domain: http://deepak.hpm.com.np (after DNS setup)"
+    echo "  Domain: http://drdeepakmehta.com.np (after DNS setup)"
     echo ""
     echo "Next steps:"
-    echo "1. Configure DNS to point deepak.hpm.com.np to $INSTANCE_IP"
+    echo "1. Configure DNS to point drdeepakmehta.com.np to $INSTANCE_IP"
     echo "2. Set up SSL certificate (SSH to server and run: sudo bash $APP_DIR/scripts/setup-ssl.sh)"
     echo "3. Make sure GitHub secrets are configured (GCP_SA_KEY, GCP_SSH_PRIVATE_KEY, GCP_SSH_USER)"
     echo "4. Push to main branch to trigger automated deployments"

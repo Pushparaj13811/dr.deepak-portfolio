@@ -4,7 +4,7 @@ This guide explains how to set up Nginx as a reverse proxy for the Dr. Deepak Me
 
 ## Configuration Details
 
-- **Domain**: deepak.hpm.com.np
+- **Domain**: drdeepakmehta.com.np
 - **Application Port**: 3002
 - **Web Server**: Nginx (reverse proxy)
 - **SSL**: Optional (Let's Encrypt)
@@ -59,7 +59,7 @@ NODE_ENV=production
 PORT=3002
 DATABASE_URL=your_neon_postgres_url
 SESSION_SECRET=your_session_secret_here
-DOMAIN=deepak.hpm.com.np
+DOMAIN=drdeepakmehta.com.np
 EOF
 
 # Restart the application
@@ -81,7 +81,7 @@ curl http://localhost:3002
 curl http://localhost
 ```
 
-Your site should now be accessible at: **http://deepak.hpm.com.np**
+Your site should now be accessible at: **http://drdeepakmehta.com.np**
 
 ---
 
@@ -103,7 +103,7 @@ The script will:
 - Configure Nginx for HTTPS
 - Set up automatic certificate renewal
 
-After SSL setup, your site will be accessible at: **https://deepak.hpm.com.np**
+After SSL setup, your site will be accessible at: **https://drdeepakmehta.com.np**
 
 ---
 
@@ -121,16 +121,16 @@ sudo apt install -y nginx
 ### 2. Create Nginx Configuration
 
 ```bash
-sudo nano /etc/nginx/sites-available/deepak.hpm.com.np
+sudo nano /etc/nginx/sites-available/drdeepakmehta.com.np
 ```
 
-Copy the contents from `nginx/deepak.hpm.com.np` in this repository.
+Copy the contents from `nginx/drdeepakmehta.com.np` in this repository.
 
 ### 3. Enable the Site
 
 ```bash
 # Create symbolic link
-sudo ln -s /etc/nginx/sites-available/deepak.hpm.com.np /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/drdeepakmehta.com.np /etc/nginx/sites-enabled/
 
 # Remove default site
 sudo rm /etc/nginx/sites-enabled/default
@@ -251,10 +251,10 @@ pm2 logs deepak-portfolio
 
 ```bash
 # Check DNS resolution
-nslookup deepak.hpm.com.np
+nslookup drdeepakmehta.com.np
 
 # Check if domain points to your server
-dig deepak.hpm.com.np +short
+dig drdeepakmehta.com.np +short
 
 # Compare with your server's IP
 curl ifconfig.me
@@ -417,7 +417,7 @@ location / {
 
 After completing nginx setup:
 
-1. ✅ Verify site is accessible at http://deepak.hpm.com.np
+1. ✅ Verify site is accessible at http://drdeepakmehta.com.np
 2. ✅ Set up SSL certificate (run `sudo bash scripts/setup-ssl.sh`)
 3. ✅ Configure automatic backups
 4. ✅ Set up monitoring (Google Cloud Monitoring)
@@ -435,6 +435,6 @@ For issues or questions:
 
 ---
 
-**Domain**: deepak.hpm.com.np
+**Domain**: drdeepakmehta.com.np
 **Application Port**: 3002
-**Configuration**: `nginx/deepak.hpm.com.np`
+**Configuration**: `nginx/drdeepakmehta.com.np`

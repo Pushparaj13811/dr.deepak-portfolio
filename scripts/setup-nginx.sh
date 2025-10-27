@@ -2,7 +2,7 @@
 
 echo "================================================"
 echo "Nginx Setup for Dr. Deepak Mehta Portfolio"
-echo "Domain: deepak.hpm.com.np"
+echo "Domain: drdeepakmehta.com.np"
 echo "Application Port: 3002"
 echo "================================================"
 echo ""
@@ -29,13 +29,13 @@ echo ""
 echo "Step 2: Creating nginx configuration..."
 
 # Copy the nginx config to sites-available
-cp nginx/deepak.hpm.com.np /etc/nginx/sites-available/deepak.hpm.com.np
+cp nginx/drdeepakmehta.com.np /etc/nginx/sites-available/drdeepakmehta.com.np
 
-echo "✅ Configuration file copied to /etc/nginx/sites-available/deepak.hpm.com.np"
+echo "✅ Configuration file copied to /etc/nginx/sites-available/drdeepakmehta.com.np"
 
 # Create symbolic link to sites-enabled if it doesn't exist
-if [ ! -L /etc/nginx/sites-enabled/deepak.hpm.com.np ]; then
-    ln -s /etc/nginx/sites-available/deepak.hpm.com.np /etc/nginx/sites-enabled/deepak.hpm.com.np
+if [ ! -L /etc/nginx/sites-enabled/drdeepakmehta.com.np ]; then
+    ln -s /etc/nginx/sites-available/drdeepakmehta.com.np /etc/nginx/sites-enabled/drdeepakmehta.com.np
     echo "✅ Enabled site configuration"
 else
     echo "✅ Site configuration already enabled"
@@ -76,7 +76,7 @@ echo "✅ Nginx Setup Complete!"
 echo "================================================"
 echo ""
 echo "Your application should now be accessible at:"
-echo "  http://deepak.hpm.com.np"
+echo "  http://drdeepakmehta.com.np"
 echo ""
 echo "Next Steps:"
 echo "1. Make sure your domain DNS points to this server's IP address"

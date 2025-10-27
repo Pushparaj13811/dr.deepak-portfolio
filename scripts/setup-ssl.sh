@@ -2,7 +2,7 @@
 
 echo "================================================"
 echo "SSL Setup with Let's Encrypt"
-echo "Domain: deepak.hpm.com.np"
+echo "Domain: drdeepakmehta.com.np"
 echo "================================================"
 echo ""
 
@@ -26,7 +26,7 @@ fi
 # Obtain SSL certificate
 echo ""
 echo "Step 2: Obtaining SSL certificate..."
-echo "⚠️  Make sure your domain deepak.hpm.com.np points to this server's IP"
+echo "⚠️  Make sure your domain drdeepakmehta.com.np points to this server's IP"
 echo ""
 
 read -p "Enter your email address for Let's Encrypt notifications: " EMAIL
@@ -37,11 +37,11 @@ if [ -z "$EMAIL" ]; then
 fi
 
 echo ""
-echo "Obtaining certificate for deepak.hpm.com.np..."
+echo "Obtaining certificate for drdeepakmehta.com.np..."
 echo ""
 
 certbot --nginx \
-    -d deepak.hpm.com.np \
+    -d drdeepakmehta.com.np \
     --non-interactive \
     --agree-tos \
     --email "$EMAIL" \
@@ -54,7 +54,7 @@ if [ $? -eq 0 ]; then
     echo "================================================"
     echo ""
     echo "Your site is now secured with HTTPS:"
-    echo "  https://deepak.hpm.com.np"
+    echo "  https://drdeepakmehta.com.np"
     echo ""
     echo "Certificate auto-renewal is configured."
     echo "Certbot will automatically renew your certificate before it expires."

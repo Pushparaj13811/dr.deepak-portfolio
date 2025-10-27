@@ -8,7 +8,7 @@ This guide explains how to deploy the Dr. Deepak Mehta Portfolio application to 
 - Compute Engine Instance: `instance-20250804-164027`
 - Zone: `us-central1-c`
 - GitHub repository with Actions enabled
-- Domain: `deepak.hpm.com.np`
+- Domain: `drdeepakmehta.com.np`
 
 ## Quick Start (First-Time Setup)
 
@@ -125,7 +125,7 @@ NODE_ENV=production
 DATABASE_URL=your_database_url_here
 SESSION_SECRET=your_session_secret_here
 PORT=3002
-DOMAIN=deepak.hpm.com.np
+DOMAIN=drdeepakmehta.com.np
 EOF
 
 # Install dependencies
@@ -165,7 +165,7 @@ gcloud compute instances add-tags instance-20250804-164027 \
 
 ### 6. Set up Nginx as Reverse Proxy (Recommended)
 
-The application is configured to run on port 3002 behind an Nginx reverse proxy at `deepak.hpm.com.np`.
+The application is configured to run on port 3002 behind an Nginx reverse proxy at `drdeepakmehta.com.np`.
 
 **Quick Setup (Automated):**
 
@@ -367,8 +367,8 @@ gcloud compute instances describe instance-20250804-164027 \
 ```
 
 Your application will be accessible at:
-- `http://deepak.hpm.com.np` (via Nginx)
-- `https://deepak.hpm.com.np` (via Nginx with SSL)
+- `http://drdeepakmehta.com.np` (via Nginx)
+- `https://drdeepakmehta.com.np` (via Nginx with SSL)
 - `http://INSTANCE_IP:3002` (direct, for testing)
 
 ## Environment Variables
@@ -386,12 +386,12 @@ DATABASE_URL=your_neon_postgres_url
 SESSION_SECRET=your_long_random_secret_here
 
 # Domain
-DOMAIN=deepak.hpm.com.np
+DOMAIN=drdeepakmehta.com.np
 ```
 
 ## Next Steps
 
-1. ✅ Set up custom domain (deepak.hpm.com.np configured)
+1. ✅ Set up custom domain (drdeepakmehta.com.np configured)
 2. Configure SSL certificate - Run `sudo bash scripts/setup-ssl.sh`
 3. Set up monitoring (Google Cloud Monitoring)
 4. Configure automatic backups
