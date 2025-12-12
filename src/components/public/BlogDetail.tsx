@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
-import type { BlogPost } from "../../types";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import type { BlogPost } from '@/types';
 
 interface BlogDetailProps {
   slug: string;
-  onBack: () => void;
 }
 
-export function BlogDetail({ slug, onBack }: BlogDetailProps) {
+export function BlogDetail({ slug }: BlogDetailProps) {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     loadPost();
@@ -20,23 +23,23 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
       const data = await res.json();
       if (data.success) {
         setPost(data.data);
-        // Update document title for SEO
-        if (data.data.meta_title) {
-          document.title = data.data.meta_title;
-        }
       }
     } catch (error) {
-      console.error("Failed to load blog post:", error);
+      console.error('Failed to load blog post:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleBack = () => {
+    router.push('/blog');
+  };
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
@@ -93,7 +96,7 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
     html = html.replace(/(<li class="ml-4 mb-1">• .*<\/li>(\s*<br>)*)+/g, (match) => {
       return '<ul class="list-none my-4 space-y-1">' + match.replace(/<br>/g, '') + '</ul>';
     });
-    
+
     html = html.replace(/(<li class="ml-4 mb-1 list-decimal">.*<\/li>(\s*<br>)*)+/g, (match) => {
       return '<ol class="list-decimal list-inside my-4 space-y-1">' + match.replace(/<br>/g, '').replace(/list-decimal/g, '') + '</ol>';
     });
@@ -121,7 +124,7 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
           <div className="text-center">
             <p className="text-gray-500 mb-4">Article not found</p>
             <button
-              onClick={onBack}
+              onClick={handleBack}
               className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,32 +141,32 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
   // Apply theme styles
   const theme = post.theme || {};
 
-  const fontSizeClasses = {
-    small: "text-sm",
-    medium: "text-base",
-    large: "text-lg",
+  const fontSizeClasses: Record<string, string> = {
+    small: 'text-sm',
+    medium: 'text-base',
+    large: 'text-lg',
   };
 
-  const fontFamilyStyles = {
-    "sans-serif": "font-sans",
-    serif: "font-serif",
-    monospace: "font-mono",
+  const fontFamilyStyles: Record<string, string> = {
+    'sans-serif': 'font-sans',
+    serif: 'font-serif',
+    monospace: 'font-mono',
   };
 
-  // Ensure we use a typed key when indexing fontFamilyStyles to avoid implicit any errors
-  const fontFamilyKey = (theme.fontFamily as keyof typeof fontFamilyStyles) || "sans-serif";
+  const fontFamilyKey = (theme.fontFamily as string) || 'sans-serif';
 
   return (
     <section className="bg-white min-h-screen">
       {/* Hero Section with Cover Image */}
       {post.image_base64 && theme.showCoverImage !== false && (
         <div className="relative h-[400px] md:h-[500px] overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.image_base64}
             alt={post.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
@@ -209,7 +212,7 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
 
           {/* Back Button */}
           <button
-            onClick={onBack}
+            onClick={handleBack}
             className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,8 +239,8 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
           </div>
 
           {/* Content */}
-          <article 
-            className={`prose prose-lg max-w-none ${fontSizeClasses[theme.fontSize || "medium"]} ${fontFamilyStyles[fontFamilyKey]}`}
+          <article
+            className={`prose prose-lg max-w-none ${fontSizeClasses[theme.fontSize || 'medium']} ${fontFamilyStyles[fontFamilyKey]}`}
             dangerouslySetInnerHTML={renderMarkdown(post.content)}
           />
 
@@ -254,14 +257,6 @@ export function BlogDetail({ slug, onBack }: BlogDetailProps) {
           )}
         </div>
       </div>
-
-      {/* SEO Meta Tags */}
-      {post.meta_description && (
-        <meta name="description" content={post.meta_description} />
-      )}
-      {post.meta_keywords && (
-        <meta name="keywords" content={post.meta_keywords} />
-      )}
     </section>
   );
 }

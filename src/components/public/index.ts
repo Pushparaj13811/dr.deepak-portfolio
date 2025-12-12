@@ -1,0 +1,11 @@
+export { Navigation } from './Navigation';
+export { Hero } from './Hero';
+export { Services } from './Services';
+export { DoctorProfile } from './DoctorProfile';
+export { Portfolio } from './Portfolio';
+export { StatsSection } from './StatsSection';
+export { Resume } from './Resume';
+export { Appointment } from './Appointment';
+export { BlogList } from './BlogList';
+export { BlogDetail } from './BlogDetail';
+export { Footer } from './Footer';

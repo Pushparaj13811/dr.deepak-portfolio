@@ -1,4 +1,4 @@
-import type { SocialLink, Profile } from "../../types";
+import type { SocialLink, Profile } from '@/types';
 
 interface FooterProps {
   socialLinks: SocialLink[];
@@ -44,7 +44,7 @@ export function Footer({ socialLinks, profile }: FooterProps) {
   };
 
   const currentYear = new Date().getFullYear();
-  const doctorName = profile?.full_name || "Doctor";
+  const doctorName = profile?.full_name || 'Doctor';
   const initials = getInitials(doctorName);
 
   return (

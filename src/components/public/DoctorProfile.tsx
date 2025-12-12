@@ -1,5 +1,4 @@
-import type { Profile } from "../../types";
-const deepakImage = "/src/assets/deepak.png";
+import type { Profile } from '@/types';
 
 interface DoctorProfileProps {
   profile: Profile | null;
@@ -12,9 +11,10 @@ export function DoctorProfile({ profile }: DoctorProfileProps) {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Doctor Image - LEFT SIDE */}
           <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={profile?.photo_base64 || deepakImage}
-              alt={profile?.full_name || "Doctor"}
+              src={profile?.photo_base64 || '/images/deepak.png'}
+              alt={profile?.full_name || 'Doctor'}
               className="w-full h-auto object-cover rounded-lg"
             />
             {/* Play button overlay (decorative) */}
@@ -30,10 +30,10 @@ export function DoctorProfile({ profile }: DoctorProfileProps) {
           {/* Doctor Bio - RIGHT SIDE */}
           <div className="space-y-4">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              {profile?.full_name || "Dr. Deepak Mehta"}
+              {profile?.full_name || 'Dr. Deepak Mehta'}
             </h2>
             <h3 className="text-[#0ea5e9] font-semibold text-lg uppercase">
-              {profile?.title || "General Physician"}
+              {profile?.title || 'General Physician'}
             </h3>
             {profile?.specialization && (
               <p className="text-sm text-gray-600 uppercase">
@@ -43,7 +43,7 @@ export function DoctorProfile({ profile }: DoctorProfileProps) {
 
             <div className="space-y-4 text-gray-700 leading-relaxed">
               <p>
-                {profile?.about_text || "Lorem ipsum dolor sit amet consectetur adipiscing elit. Dignissim ut tempor sagittis. Lorem ipsum dolor sit amet consectetur adipiscing elit."}
+                {profile?.about_text || 'Lorem ipsum dolor sit amet consectetur adipiscing elit. Dignissim ut tempor sagittis. Lorem ipsum dolor sit amet consectetur adipiscing elit.'}
               </p>
             </div>
 

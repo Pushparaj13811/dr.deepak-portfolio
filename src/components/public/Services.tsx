@@ -1,4 +1,4 @@
-import type { Service } from "../../types";
+import type { Service } from '@/types';
 
 interface ServicesProps {
   services: Service[];
@@ -38,7 +38,7 @@ export function Services({ services }: ServicesProps) {
             <div key={service.id} className="text-center py-8">
               <div className="flex flex-col items-center">
                 <div className="w-20 h-20 bg-[#e0f2fe] rounded-full flex items-center justify-center text-[#0ea5e9] mb-6">
-                  {iconMap[service.icon || "medical"] || iconMap.medical}
+                  {iconMap[service.icon || 'medical'] || iconMap.medical}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   {service.title}

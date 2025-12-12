@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Input, Textarea } from "../shared/Input";
-import { Button } from "../shared/Button";
-import type { AppointmentRequest, ContactInfo } from "../../types";
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui';
+import type { AppointmentRequest, ContactInfo } from '@/types';
 
 interface AppointmentProps {
   contactInfo: ContactInfo | null;
@@ -13,14 +14,14 @@ interface AppointmentFormData extends AppointmentRequest {
 
 export function Appointment({ contactInfo }: AppointmentProps) {
   const [formData, setFormData] = useState<AppointmentFormData>({
-    full_name: "",
-    email: "",
-    phone: "",
-    date: "",
-    message: "",
+    full_name: '',
+    email: '',
+    phone: '',
+    date: '',
+    message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,22 +29,22 @@ export function Appointment({ contactInfo }: AppointmentProps) {
     setSubmitMessage(null);
 
     try {
-      const response = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setSubmitMessage({ type: "success", text: "Appointment request submitted successfully! We'll contact you soon." });
-        setFormData({ full_name: "", email: "", phone: "", date: "", message: "" });
+        setSubmitMessage({ type: 'success', text: "Appointment request submitted successfully! We'll contact you soon." });
+        setFormData({ full_name: '', email: '', phone: '', date: '', message: '' });
       } else {
-        setSubmitMessage({ type: "error", text: data.error || "Failed to submit appointment request." });
+        setSubmitMessage({ type: 'error', text: data.error || 'Failed to submit appointment request.' });
       }
-    } catch (error) {
-      setSubmitMessage({ type: "error", text: "An error occurred. Please try again later." });
+    } catch {
+      setSubmitMessage({ type: 'error', text: 'An error occurred. Please try again later.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -115,9 +116,9 @@ export function Appointment({ contactInfo }: AppointmentProps) {
               {submitMessage && (
                 <div
                   className={`p-4 rounded-lg ${
-                    submitMessage.type === "success"
-                      ? "bg-green-50 text-green-800 border border-green-200"
-                      : "bg-red-50 text-red-800 border border-red-200"
+                    submitMessage.type === 'success'
+                      ? 'bg-green-50 text-green-800 border border-green-200'
+                      : 'bg-red-50 text-red-800 border border-red-200'
                   }`}
                 >
                   {submitMessage.text}

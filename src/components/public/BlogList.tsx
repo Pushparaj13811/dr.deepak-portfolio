@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import type { BlogPost } from "../../types";
+'use client';
 
-interface BlogListProps {
-  onSelectPost: (slug: string) => void;
-}
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import type { BlogPost } from '@/types';
 
-export function BlogList({ onSelectPost }: BlogListProps) {
+export function BlogList() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const router = useRouter();
 
   useEffect(() => {
     loadPosts();
@@ -16,24 +16,28 @@ export function BlogList({ onSelectPost }: BlogListProps) {
 
   const loadPosts = async () => {
     try {
-      const res = await fetch("/api/blog");
+      const res = await fetch('/api/blog');
       const data = await res.json();
       if (data.success) {
         setPosts(data.data || []);
       }
     } catch (error) {
-      console.error("Failed to load blog posts:", error);
+      console.error('Failed to load blog posts:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
+  };
+
+  const handleSelectPost = (slug: string) => {
+    router.push(`/blog/${slug}`);
   };
 
   const categories = [...new Set(posts.map((p) => p.category).filter(Boolean))];
@@ -70,11 +74,11 @@ export function BlogList({ onSelectPost }: BlogListProps) {
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-4 mb-12">
             <button
-              onClick={() => setSelectedCategory("")}
+              onClick={() => setSelectedCategory('')}
               className={`px-6 py-2 rounded-full font-medium transition ${
-                selectedCategory === ""
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-600"
+                selectedCategory === ''
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-600'
               }`}
             >
               All Posts
@@ -85,8 +89,8 @@ export function BlogList({ onSelectPost }: BlogListProps) {
                 onClick={() => setSelectedCategory(category as string)}
                 className={`px-6 py-2 rounded-full font-medium transition ${
                   selectedCategory === category
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-600"
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-600'
                 }`}
               >
                 {category}
@@ -101,7 +105,7 @@ export function BlogList({ onSelectPost }: BlogListProps) {
             <p className="text-gray-500">
               {selectedCategory
                 ? `No posts found in "${selectedCategory}" category.`
-                : "No blog posts available yet."}
+                : 'No blog posts available yet.'}
             </p>
           </div>
         )}
@@ -112,12 +116,13 @@ export function BlogList({ onSelectPost }: BlogListProps) {
             <article
               key={post.id}
               className="group cursor-pointer"
-              onClick={() => onSelectPost(post.slug)}
+              onClick={() => handleSelectPost(post.slug)}
             >
               <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                 {/* Cover Image */}
                 {post.image_base64 && post.theme?.showCoverImage !== false && (
                   <div className="aspect-video bg-gray-100 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={post.image_base64}
                       alt={post.title}

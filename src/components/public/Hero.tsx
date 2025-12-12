@@ -1,6 +1,6 @@
-import type { Profile, SocialLink } from "../../types";
-import heroBackground from "../../assets/Hero-background.jpg";
-import heroImage from "../../assets/Hero-image.png";
+'use client';
+
+import type { Profile, SocialLink } from '@/types';
 
 interface HeroProps {
   profile: Profile | null;
@@ -8,11 +8,10 @@ interface HeroProps {
 }
 
 export function Hero({ profile, socialLinks }: HeroProps) {
-  console.log(profile)
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+      element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -82,7 +81,7 @@ export function Hero({ profile, socialLinks }: HeroProps) {
     <section
       id="home"
       className="min-h-screen md:h-[85vh] lg:h-screen relative bg-cover bg-center pt-20 md:pt-0"
-      style={{ backgroundImage: `url(${heroBackground})` }}
+      style={{ backgroundImage: `url(/images/Hero-background.jpg)` }}
     >
       <div className="absolute inset-0"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full relative z-10">
@@ -91,14 +90,14 @@ export function Hero({ profile, socialLinks }: HeroProps) {
           <div className="order-2 md:order-1 py-6 md:py-0 flex items-center md:h-full">
             <div className="space-y-4 md:space-y-6 w-full">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black leading-tight">
-                {profile?.tagline || "Dreams of life remains till the heart beats"}
+                {profile?.tagline || 'Dreams of life remains till the heart beats'}
               </h1>
               <p className="text-sm md:text-base text-black justify-around">
                 {profile?.about_text_short}
               </p>
               <div className="flex gap-3 md:gap-4">
                 <button
-                  onClick={() => scrollToSection("contact")}
+                  onClick={() => scrollToSection('contact')}
                   className="px-6 md:px-8 py-2.5 md:py-3 bg-[#0ea5e9] text-white rounded-md font-medium hover:bg-[#0284c7] transition shadow-lg text-sm md:text-base"
                 >
                   Make Appointment
@@ -129,9 +128,10 @@ export function Hero({ profile, socialLinks }: HeroProps) {
 
           {/* Doctor Image - RIGHT SIDE */}
           <div className="relative order-1 md:order-2 h-[60vh] md:h-full flex items-end" style={{ lineHeight: 0 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={heroImage}
-              alt={profile?.full_name || "Doctor"}
+              src="/images/Hero-image.png"
+              alt={profile?.full_name || 'Doctor'}
               className="w-full h-auto max-h-none object-cover object-bottom rounded-lg md:rounded-none"
               style={{ display: 'block', margin: 0, padding: 0, minHeight: '85%' }}
             />

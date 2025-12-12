@@ -1,24 +1,25 @@
-import { useState } from "react";
-import type { Education, Experience, Skill, Award, Profile } from "../../types";
+'use client';
+
+import { useState } from 'react';
+import type { Education, Experience, Skill, Award } from '@/types';
 
 interface ResumeProps {
   education: Education[];
   experience: Experience[];
   skills: Skill[];
   awards: Award[];
-  profile: Profile | null;
 }
 
-type Tab = "education" | "experience" | "skills" | "awards";
+type Tab = 'education' | 'experience' | 'skills' | 'awards';
 
 export function Resume({ education, experience, skills, awards }: ResumeProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("education");
+  const [activeTab, setActiveTab] = useState<Tab>('education');
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "education", label: "Education" },
-    { id: "experience", label: "Experience" },
-    { id: "skills", label: "Skills" },
-    { id: "awards", label: "Awards" },
+    { id: 'education', label: 'Education' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'awards', label: 'Awards' },
   ];
 
   return (
@@ -37,8 +38,8 @@ export function Resume({ education, experience, skills, awards }: ResumeProps) {
               onClick={() => setActiveTab(tab.id)}
               className={`px-6 py-2 rounded-full font-medium transition ${
                 activeTab === tab.id
-                  ? "bg-[#0ea5e9] text-white"
-                  : "bg-white text-gray-700 border-2 border-gray-300 hover:border-[#0ea5e9]"
+                  ? 'bg-[#0ea5e9] text-white'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-[#0ea5e9]'
               }`}
             >
               {tab.label}
@@ -48,7 +49,7 @@ export function Resume({ education, experience, skills, awards }: ResumeProps) {
 
         {/* Tab Content - 2 Column Grid */}
         <div className="grid md:grid-cols-2 gap-8">
-          {activeTab === "education" && (
+          {activeTab === 'education' && (
             <>
               {education.map((item) => (
                 <div key={item.id} className="border-l-4 border-[#0ea5e9] pl-6 py-4">
@@ -67,7 +68,7 @@ export function Resume({ education, experience, skills, awards }: ResumeProps) {
             </>
           )}
 
-          {activeTab === "experience" && (
+          {activeTab === 'experience' && (
             <>
               {experience.map((item) => (
                 <div key={item.id} className="border-l-4 border-[#0ea5e9] pl-6 py-4">
@@ -78,7 +79,7 @@ export function Resume({ education, experience, skills, awards }: ResumeProps) {
                       {item.description && <p className="text-sm text-gray-600 mt-2 leading-relaxed">{item.description}</p>}
                     </div>
                     <span className="text-sm text-gray-500 shrink-0">
-                      {item.start_date} - {item.end_date || "Present"}
+                      {item.start_date} - {item.end_date || 'Present'}
                     </span>
                   </div>
                 </div>
@@ -86,7 +87,7 @@ export function Resume({ education, experience, skills, awards }: ResumeProps) {
             </>
           )}
 
-          {activeTab === "skills" && (
+          {activeTab === 'skills' && (
             <>
               {skills.map((skill) => (
                 <div key={skill.id} className="border-l-4 border-[#0ea5e9] pl-6 py-4">
@@ -105,13 +106,14 @@ export function Resume({ education, experience, skills, awards }: ResumeProps) {
             </>
           )}
 
-          {activeTab === "awards" && (
+          {activeTab === 'awards' && (
             <>
               {awards.map((award) => (
                 <div key={award.id} className="border-l-4 border-[#0ea5e9] pl-6 py-4">
                   <div className="flex items-start gap-4">
                     {award.image_base64 && (
                       <div className="shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={award.image_base64}
                           alt={award.title}

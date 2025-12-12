@@ -1,18 +1,20 @@
-import { useState } from "react";
-import type { PortfolioItem } from "../../types";
+'use client';
+
+import { useState } from 'react';
+import type { PortfolioItem } from '@/types';
 
 interface PortfolioProps {
   items: PortfolioItem[];
 }
 
 export function Portfolio({ items }: PortfolioProps) {
-  const [activeCategory, setActiveCategory] = useState<string>("All Work");
+  const [activeCategory, setActiveCategory] = useState<string>('All Work');
 
   // Get unique categories
-  const categories = ["All Work", ...Array.from(new Set(items.map((item) => item.category)))];
+  const categories = ['All Work', ...Array.from(new Set(items.map((item) => item.category)))];
 
   // Filter items by category
-  const filteredItems = activeCategory === "All Work"
+  const filteredItems = activeCategory === 'All Work'
     ? items
     : items.filter((item) => item.category === activeCategory);
 
@@ -38,8 +40,8 @@ export function Portfolio({ items }: PortfolioProps) {
               onClick={() => setActiveCategory(category)}
               className={`px-6 py-2 rounded-full font-medium transition ${
                 activeCategory === category
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-600"
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-600'
               }`}
             >
               {category}
@@ -55,12 +57,13 @@ export function Portfolio({ items }: PortfolioProps) {
               className="group relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 break-inside-avoid mb-6"
             >
               <div className={`${getItemHeight(index)} relative`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.image_base64}
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
                   <div>
                     <h3 className="text-white font-semibold text-lg">{item.title}</h3>
                     {item.description && (
